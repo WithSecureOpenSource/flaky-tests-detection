@@ -39,3 +39,7 @@ Github actions plugin to check flakiness of tests by calculating fliprates. Usag
   * `--test-history-csv=example_history/test_history.csv --grouping-option=days --window-size=1 --window-count=7 --top-n=5`
 * `JUnit` files with calculations per 5 runs. 15 runs history and 5 tests printed out
   * `--junit-files=example_history/junit_files --grouping-option=runs --window-size=5 --window-count=3 --top-n=5`
+
+## Run tests
+
+* `pip install -r requirements.txt -r requirements-dev.txt` and `pytest`
