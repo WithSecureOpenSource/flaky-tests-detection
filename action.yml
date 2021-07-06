@@ -1,0 +1,11 @@
+name: "flaky test analyzer"
+description: "print flakiness scores"
+inputs:
+  args:
+    description: "args for check_flakes.py"
+    required: true
+runs:
+  using: "docker"
+  image: "Dockerfile"
+  args:
+    - ${{ inputs.args }}
