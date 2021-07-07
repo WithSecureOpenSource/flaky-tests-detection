@@ -12,8 +12,8 @@ EWM_ADJUST = False
 
 def calc_fliprate(testruns: pd.Series) -> float:
     """Calculate test result fliprate from given test results series"""
-    if len(testruns) == 1:
-        return 0
+    if len(testruns) < 2:
+        return 0.0
     first = True
     previous = None
     flips = 0
