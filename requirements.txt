@@ -1,2 +1,4 @@
 pandas
 junitparser
+seaborn
+matplotlib

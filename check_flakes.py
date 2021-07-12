@@ -1,13 +1,32 @@
 import argparse
 import glob
-from typing import List, Tuple
+from typing import Dict, NamedTuple, Set
 
 from junitparser import JUnitXml
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 EWM_ALPHA = 0.1
 EWM_ADJUST = False
+HEATMAP_FIGSIZE = (100, 50)
+
+PrintData = NamedTuple(
+    "PrintData",
+    [
+        ("top_normal_scores", Dict[str, float]),
+        ("top_ewm_scores", Dict[str, float]),
+    ],
+)
+
+TableData = NamedTuple(
+    "TableData",
+    [
+        ("normal_table", pd.DataFrame),
+        ("ewm_table", pd.DataFrame),
+    ],
+)
 
 
 def calc_fliprate(testruns: pd.Series) -> float:
@@ -42,11 +61,11 @@ def non_overlapping_window_fliprate(
     return fliprate_groups.rename(lambda x: window_count - x).sort_index()
 
 
-def calculate_n_day_flipdata(
-    testrun_table: pd.DataFrame, top_n: int, days: int, window_count: int
-) -> Tuple[List, List]:
+def calculate_n_days_fliprate_table(
+    testrun_table: pd.DataFrame, days: int, window_count: int
+) -> pd.DataFrame:
     """Select given history amount and calculate fliprates for given n day windows.
-    Return top fliprates (moving average and without) for the latest window.
+    Return a table containing the results.
     """
     data = testrun_table[
         testrun_table.index
@@ -65,26 +84,14 @@ def calculate_n_day_flipdata(
         .droplevel("test_identifier")
     )
 
-    last_window_values = fliprate_table.groupby("test_identifier").last()
-
-    top_fliprates = last_window_values.nlargest(top_n, "flip_rate")[
-        ["flip_rate"]
-    ].reset_index()
-
-    top_fliprates_ewm = last_window_values.nlargest(top_n, "flip_rate_ewm")[
-        ["flip_rate_ewm"]
-    ].reset_index()
-
-    return top_fliprates.to_records(index=False), top_fliprates_ewm.to_records(
-        index=False
-    )
+    return fliprate_table
 
 
-def calculate_n_runs_flipdata(
-    testrun_table: pd.DataFrame, top_n: int, window_size: int, window_count: int
-) -> Tuple[List, List]:
+def calculate_n_runs_fliprate_table(
+    testrun_table: pd.DataFrame, window_size: int, window_count: int
+) -> pd.DataFrame:
     """Calculate fliprates for given n run window and select m of those windows
-    Return top fliprates (moving average and without) for the latest window.
+    Return a table containing the results.
     """
     fliprates = testrun_table.groupby("test_identifier")["test_status"].apply(
         lambda x: non_overlapping_window_fliprate(x, window_size, window_count)
@@ -99,6 +106,44 @@ def calculate_n_runs_flipdata(
     )
     fliprate_table = fliprate_table.rename(columns={"level_1": "window"})
 
+    return fliprate_table
+
+
+def get_top_fliprates_from_day_grouping(
+    fliprate_table: pd.DataFrame, top_n: int
+) -> PrintData:
+    """Look at the latest calculation timestamp for each test from the fliprate table
+    and return the top n highest scoring test identifiers and their scores
+    """
+    last_window_values = fliprate_table.groupby("test_identifier").last()
+
+    top_fliprates = last_window_values.nlargest(top_n, "flip_rate")[
+        ["flip_rate"]
+    ].reset_index()
+
+    top_fliprates_ewm = last_window_values.nlargest(top_n, "flip_rate_ewm")[
+        ["flip_rate_ewm"]
+    ].reset_index()
+
+    top_fliprates_dict = {
+        testname: score for testname, score in top_fliprates.to_records(index=False)
+    }
+
+    top_fliprates_ewm_dict = {
+        testname: score for testname, score in top_fliprates_ewm.to_records(index=False)
+    }
+
+    return PrintData(
+        top_normal_scores=top_fliprates_dict, top_ewm_scores=top_fliprates_ewm_dict
+    )
+
+
+def get_top_fliprates_from_run_grouping(
+    fliprate_table: pd.DataFrame, top_n: int, window_count: int
+) -> PrintData:
+    """Look at the latest calculation window from the fliprate table
+    and return the top n highest scoring test identifiers and their scores
+    """
     top_fliprates = fliprate_table[fliprate_table["window"] == window_count].nlargest(
         top_n, "flip_rate"
     )[["test_identifier", "flip_rate"]]
@@ -107,9 +152,51 @@ def calculate_n_runs_flipdata(
         fliprate_table["window"] == window_count
     ].nlargest(top_n, "flip_rate_ewm")[["test_identifier", "flip_rate_ewm"]]
 
-    return top_fliprates.to_records(index=False), top_fliprates_ewm.to_records(
-        index=False
+    top_fliprates_dict = {
+        testname: score for testname, score in top_fliprates.to_records(index=False)
+    }
+
+    top_fliprates_ewm_dict = {
+        testname: score for testname, score in top_fliprates_ewm.to_records(index=False)
+    }
+
+    return PrintData(
+        top_normal_scores=top_fliprates_dict, top_ewm_scores=top_fliprates_ewm_dict
     )
+
+
+def get_image_tables_from_fliprate_table(
+    fliprate_table: pd.DataFrame,
+    top_identifiers: Set[str],
+    top_identifiers_ewm: Set[str],
+) -> TableData:
+    """Construct tables for heatmap generation from the fliprate table.
+    Rows contain the test identifier and
+    columns contain the window as timestamp for daily grouping or integer for grouping with runs.
+    """
+    pivot_columns = "timestamp" if "timestamp" in fliprate_table.columns else "window"
+    image = fliprate_table.pivot(
+        index="test_identifier", columns=pivot_columns, values="flip_rate"
+    )
+    image_ewm = fliprate_table.pivot(
+        index="test_identifier", columns=pivot_columns, values="flip_rate_ewm"
+    )
+
+    image = image[image.index.isin(top_identifiers)]
+    image_ewm = image_ewm[image_ewm.index.isin(top_identifiers_ewm)]
+
+    return TableData(normal_table=image, ewm_table=image_ewm)
+
+
+def generate_image(image: pd.DataFrame, title: str, filename: str) -> None:
+    """Save a seaborn heatmap with given data"""
+    plt.figure(figsize=HEATMAP_FIGSIZE)
+    plt.title(title, fontsize=50)
+    sns.heatmap(
+        data=image, linecolor="black", linewidths=0.1, annot=True
+    ).set_facecolor("black")
+    plt.savefig(filename, bbox_inches="tight")
+    plt.close()
 
 
 def parse_junit_to_df(folder_path: str) -> pd.DataFrame:
@@ -139,7 +226,9 @@ def parse_junit_to_df(folder_path: str) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    """Print out top flaky tests and their fliprate scores"""
+    """Print out top flaky tests and their fliprate scores.
+    Also generate seaborn heatmaps visualizing the results if wanted.
+    """
 
     parser = argparse.ArgumentParser()
 
@@ -153,6 +242,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--grouping-option",
+        choices=["days", "runs"],
         help="flip rate calculation method - days or runs",
         required=True,
     )
@@ -174,6 +264,7 @@ if __name__ == "__main__":
         help="amount of unique tests and scores to print out",
         required=True,
     )
+    parser.add_argument("--heatmap", action="store_true", default=False)
 
     args = parser.parse_args()
 
@@ -189,19 +280,46 @@ if __name__ == "__main__":
     df = df.sort_index()
 
     if args.grouping_option == "days":
-        top_fliprates, top_fliprates_ewm = calculate_n_day_flipdata(
-            df, args.top_n, args.window_size, args.window_count
+        fliprate_table = calculate_n_days_fliprate_table(
+            df, args.window_size, args.window_count
         )
+        printdata = get_top_fliprates_from_day_grouping(fliprate_table, args.top_n)
     else:
-        top_fliprates, top_fliprates_ewm = calculate_n_runs_flipdata(
-            df, args.top_n, args.window_size, args.window_count
+        fliprate_table = calculate_n_runs_fliprate_table(
+            df, args.window_size, args.window_count
+        )
+        printdata = get_top_fliprates_from_run_grouping(
+            fliprate_table, args.top_n, args.window_count
         )
 
-    print(f"Top {args.top_n} flaky tests based on latest fliprate")
-    for testname, score in top_fliprates:
+    print(f"Top {args.top_n} flaky tests based on latest window fliprate")
+    for testname, score in printdata.top_normal_scores.items():
         print(testname, "--- score:", score)
     print(
-        f"\nTop {args.top_n} flaky tests based on latest exponential weighted moving average fliprate score"
+        f"\nTop {args.top_n} flaky tests based on latest window exponential weighted moving average fliprate score"
     )
-    for testname, score in top_fliprates_ewm:
+    for testname, score in printdata.top_ewm_scores.items():
         print(testname, "--- score:", score)
+
+    if args.heatmap:
+        print("\n\nGenerating heatmap images...")
+        top_identifiers = set(printdata.top_normal_scores.keys())
+        top_identifiers_ewm = set(printdata.top_normal_scores.keys())
+
+        tabledata = get_image_tables_from_fliprate_table(
+            fliprate_table, top_identifiers, top_identifiers_ewm
+        )
+
+        if args.grouping_option == "days":
+            title = f"Top {args.top_n} of tests with highest latest window fliprate - no exponentially weighted moving average - last {args.window_size * args.window_count} days of data"
+            filename = f"{args.window_size}day_flip_rate_top{args.top_n}.png"
+            title_ewm = f"Top {args.top_n} of tests with highest latest window exponentially weighted moving average fliprate score - alpha (smoothing factor) = {EWM_ALPHA} - last {args.window_size * args.window_count} days of data"
+            filename_ewm = f"{args.window_size}day_flip_rate_ewm_top{args.top_n}.png"
+        else:
+            title = f"Top {args.top_n} of tests with highest latest window fliprate - no exponentially weighted moving average - {args.window_size} last runs fliprate and {args.window_size * args.window_count} last runs data"
+            filename = f"{args.window_size}runs_flip_rate_top{args.top_n}.png"
+            title_ewm = f"Top {args.top_n} of tests with highest latest window exponentially weighted moving average fliprate score - alpha (smoothing factor) = {EWM_ALPHA} - {args.window_size} last runs fliprate and {args.window_size * args.window_count} last runs data"
+            filename_ewm = f"{args.window_size}runs_flip_rate_ewm_top{args.top_n}.png"
+        generate_image(tabledata.normal_table, title, filename)
+        generate_image(tabledata.ewm_table, title_ewm, filename_ewm)
+        print(filename, "and", filename_ewm, "generated.")
