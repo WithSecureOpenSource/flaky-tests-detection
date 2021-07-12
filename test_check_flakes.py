@@ -1,7 +1,5 @@
 from check_flakes import (
     calc_fliprate,
-    calculate_n_day_flipdata,
-    calculate_n_runs_flipdata,
     non_overlapping_window_fliprate,
 )
 
@@ -117,49 +115,3 @@ def test_non_overlapping_window_fliprate(test_input, expected) -> None:
     expected_result = pd.Series(index=expected[0], data=expected[1])
 
     assert_series_equal(result, expected_result)
-
-
-def test_calculate_n_day_flipdata() -> None:
-    """Test that the correct flaky test output is calculated when grouping with days.
-    Moving average (ewm) fliprate depends on EWM value but should be higher than latest normal fliprate.
-    """
-    top_n = 1
-    day_window = 1
-    day_window_count = 3
-
-    df = create_test_history_df()
-    top_fliprates, top_fliprates_ewm = calculate_n_day_flipdata(
-        df, top_n, day_window, day_window_count
-    )
-
-    top_flaky_test_name, top_flaky_test_score = top_fliprates[0]
-    top_flaky_test_name_ewm, top_flaky_test_score_ewm = top_fliprates_ewm[0]
-
-    assert top_flaky_test_name == "test1"
-    assert top_flaky_test_score == 0.5
-
-    assert top_flaky_test_name_ewm == "test1"
-    assert top_flaky_test_score_ewm > 0.5
-
-
-def test_calculate_n_runs_flipdata() -> None:
-    """Test that the correct flaky test output is calculated when grouping with runs.
-    Moving average (ewm) fliprate depends on EWM value but should be higher than latest normal fliprate.
-    """
-    top_n = 1
-    run_window = 3
-    run_window_count = 2
-
-    df = create_test_history_df()
-    top_fliprates, top_fliprates_ewm = calculate_n_runs_flipdata(
-        df, top_n, run_window, run_window_count
-    )
-
-    top_flaky_test_name, top_flaky_test_score = top_fliprates[0]
-    top_flaky_test_name_ewm, top_flaky_test_score_ewm = top_fliprates_ewm[0]
-
-    assert top_flaky_test_name == "test1"
-    assert top_flaky_test_score == 0.5
-
-    assert top_flaky_test_name_ewm == "test1"
-    assert top_flaky_test_score_ewm > 0.5
