@@ -2,6 +2,7 @@ from check_flakes import (
     calc_fliprate,
     calculate_n_days_fliprate_table,
     calculate_n_runs_fliprate_table,
+    get_top_fliprates,
     non_overlapping_window_fliprate,
 )
 
@@ -140,19 +141,18 @@ def test_calculate_n_days_fliprate_table() -> None:
 
     expected_fliprate_table = pd.DataFrame(
         {
-            "timestamp": [
-                "2021-07-01",
-                "2021-07-01",
-                "2021-07-02",
-                "2021-07-02",
-                "2021-07-03",
-                "2021-07-03",
-            ],
+            "timestamp": pd.to_datetime(
+                [
+                    "2021-07-01",
+                    "2021-07-01",
+                    "2021-07-02",
+                    "2021-07-02",
+                    "2021-07-03",
+                    "2021-07-03",
+                ]
+            ),
             "test_identifier": ["test1", "test2", "test1", "test2", "test1", "test2"],
         }
-    )
-    expected_fliprate_table["timestamp"] = pd.to_datetime(
-        expected_fliprate_table["timestamp"]
     )
     # check other than fliprate values correctness
     assert_frame_equal(result_fliprate_table, expected_fliprate_table)
@@ -186,3 +186,58 @@ def test_calculate_n_runs_fliprate_table() -> None:
 
     # check other than fliprate values correctness
     assert_frame_equal(result_fliprate_table, expected_fliprate_table)
+
+
+def test_get_top_fliprates_from_run_windows() -> None:
+    """Test calculating the top fliprates from fliprate table with n runs group windows"""
+    fliprate_table = pd.DataFrame(
+        {
+            "test_identifier": ["test1", "test2", "test1", "test2", "test1", "test2"],
+            "window": [1, 1, 2, 2, 3, 3],
+            "flip_rate": [0.0, 0.0, 1.0, 0.0, 0.5, 0.0],
+            "flip_rate_ewm": [0.0, 0.0, 0.95, 0.0, 0.7, 0.0],
+        }
+    )
+
+    result = get_top_fliprates(fliprate_table, 1)
+
+    assert result.top_normal_scores == {"test1": 0.5}
+    assert result.top_ewm_scores == {"test1": 0.7}
+
+
+def test_get_top_fliprates_from_day_windows() -> None:
+    """Test calculating the top fliprates from fliprate table with n days group windows"""
+    fliprate_table = pd.DataFrame(
+        {
+            "timestamp": pd.to_datetime(
+                [
+                    "2021-07-01",
+                    "2021-07-01",
+                    "2021-07-01",
+                    "2021-07-02",
+                    "2021-07-02",
+                    "2021-07-02",
+                    "2021-07-03",
+                    "2021-07-03",
+                    "2021-07-03",
+                ]
+            ),
+            "test_identifier": [
+                "test1",
+                "test2",
+                "test3",
+                "test1",
+                "test2",
+                "test3",
+                "test1",
+                "test2",
+                "test3",
+            ],
+            "flip_rate": [0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 0.5, 0.0, 0.3],
+            "flip_rate_ewm": [0.0, 0.0, 0.5, 0.95, 0.0, 0.5, 0.7, 0.0, 0.2],
+        }
+    )
+    result = get_top_fliprates(fliprate_table, 2)
+
+    assert result.top_normal_scores == {"test1": 0.5, "test3": 0.3}
+    assert result.top_ewm_scores == {"test1": 0.7, "test3": 0.2}
