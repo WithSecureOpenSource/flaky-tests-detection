@@ -1,10 +1,12 @@
 from check_flakes import (
     calc_fliprate,
+    calculate_n_days_fliprate_table,
+    calculate_n_runs_fliprate_table,
     non_overlapping_window_fliprate,
 )
 
 import pandas as pd
-from pandas.testing import assert_series_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 import pytest
 
 
@@ -115,3 +117,72 @@ def test_non_overlapping_window_fliprate(test_input, expected) -> None:
     expected_result = pd.Series(index=expected[0], data=expected[1])
 
     assert_series_equal(result, expected_result)
+
+
+def test_calculate_n_days_fliprate_table() -> None:
+    """Test calculation of the fliprate table with valid daily grouping settings.
+    Ignore checking correctness of flip_rate and flip_rate_ewm numeric values.
+    """
+    df = create_test_history_df()
+    result_fliprate_table = calculate_n_days_fliprate_table(df, 1, 3)
+
+    # check correct columns
+    assert list(result_fliprate_table.columns) == [
+        "timestamp",
+        "test_identifier",
+        "flip_rate",
+        "flip_rate_ewm",
+    ]
+
+    result_fliprate_table = result_fliprate_table.drop(
+        ["flip_rate", "flip_rate_ewm"], axis=1
+    )
+
+    expected_fliprate_table = pd.DataFrame(
+        {
+            "timestamp": [
+                "2021-07-01",
+                "2021-07-01",
+                "2021-07-02",
+                "2021-07-02",
+                "2021-07-03",
+                "2021-07-03",
+            ],
+            "test_identifier": ["test1", "test2", "test1", "test2", "test1", "test2"],
+        }
+    )
+    expected_fliprate_table["timestamp"] = pd.to_datetime(
+        expected_fliprate_table["timestamp"]
+    )
+    # check other than fliprate values correctness
+    assert_frame_equal(result_fliprate_table, expected_fliprate_table)
+
+
+def test_calculate_n_runs_fliprate_table() -> None:
+    """Test calculation of the fliprate table with valid grouping by runs settings.
+    Ignore checking correctness of flip_rate and flip_rate_ewm numeric values.
+    """
+    df = create_test_history_df()
+    result_fliprate_table = calculate_n_runs_fliprate_table(df, 2, 3)
+
+    # check correct columns
+    assert list(result_fliprate_table.columns) == [
+        "test_identifier",
+        "window",
+        "flip_rate",
+        "flip_rate_ewm",
+    ]
+
+    result_fliprate_table = result_fliprate_table.drop(
+        ["flip_rate", "flip_rate_ewm"], axis=1
+    )
+
+    expected_fliprate_table = pd.DataFrame(
+        {
+            "test_identifier": ["test1", "test1", "test1", "test2", "test2", "test2"],
+            "window": [1, 2, 3, 1, 2, 3],
+        }
+    )
+
+    # check other than fliprate values correctness
+    assert_frame_equal(result_fliprate_table, expected_fliprate_table)
