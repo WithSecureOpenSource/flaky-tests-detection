@@ -73,6 +73,54 @@ def create_test_history_df() -> pd.DataFrame:
     return df
 
 
+def create_fliprate_table_bydays() -> pd.DataFrame:
+    """Create a fliprate table for tests with grouping by days"""
+    fliprate_table = pd.DataFrame(
+        {
+            "timestamp": pd.to_datetime(
+                [
+                    "2021-07-01",
+                    "2021-07-01",
+                    "2021-07-01",
+                    "2021-07-02",
+                    "2021-07-02",
+                    "2021-07-02",
+                    "2021-07-03",
+                    "2021-07-03",
+                    "2021-07-03",
+                ]
+            ),
+            "test_identifier": [
+                "test1",
+                "test2",
+                "test3",
+                "test1",
+                "test2",
+                "test3",
+                "test1",
+                "test2",
+                "test3",
+            ],
+            "flip_rate": [0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 0.5, 0.0, 0.3],
+            "flip_rate_ewm": [0.0, 0.0, 0.5, 0.95, 0.0, 0.5, 0.7, 0.0, 0.2],
+        }
+    )
+    return fliprate_table
+
+
+def create_fliprate_table_byruns() -> pd.DataFrame:
+    """Create a fliprate table for tests with grouping by runs"""
+    fliprate_table = pd.DataFrame(
+        {
+            "test_identifier": ["test1", "test2", "test1", "test2", "test1", "test2"],
+            "window": [1, 1, 2, 2, 3, 3],
+            "flip_rate": [0.0, 0.0, 1.0, 0.0, 0.5, 0.0],
+            "flip_rate_ewm": [0.0, 0.0, 0.95, 0.0, 0.7, 0.0],
+        }
+    )
+    return fliprate_table
+
+
 @pytest.mark.parametrize(
     "test_input,expected",
     [
@@ -191,15 +239,7 @@ def test_calculate_n_runs_fliprate_table() -> None:
 
 def test_get_top_fliprates_from_run_windows() -> None:
     """Test calculating the top fliprates from fliprate table with n runs group windows"""
-    fliprate_table = pd.DataFrame(
-        {
-            "test_identifier": ["test1", "test2", "test1", "test2", "test1", "test2"],
-            "window": [1, 1, 2, 2, 3, 3],
-            "flip_rate": [0.0, 0.0, 1.0, 0.0, 0.5, 0.0],
-            "flip_rate_ewm": [0.0, 0.0, 0.95, 0.0, 0.7, 0.0],
-        }
-    )
-
+    fliprate_table = create_fliprate_table_byruns()
     result = get_top_fliprates(fliprate_table, 1)
 
     assert result.top_normal_scores == {"test1": 0.5}
@@ -208,36 +248,7 @@ def test_get_top_fliprates_from_run_windows() -> None:
 
 def test_get_top_fliprates_from_day_windows() -> None:
     """Test calculating the top fliprates from fliprate table with n days group windows"""
-    fliprate_table = pd.DataFrame(
-        {
-            "timestamp": pd.to_datetime(
-                [
-                    "2021-07-01",
-                    "2021-07-01",
-                    "2021-07-01",
-                    "2021-07-02",
-                    "2021-07-02",
-                    "2021-07-02",
-                    "2021-07-03",
-                    "2021-07-03",
-                    "2021-07-03",
-                ]
-            ),
-            "test_identifier": [
-                "test1",
-                "test2",
-                "test3",
-                "test1",
-                "test2",
-                "test3",
-                "test1",
-                "test2",
-                "test3",
-            ],
-            "flip_rate": [0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 0.5, 0.0, 0.3],
-            "flip_rate_ewm": [0.0, 0.0, 0.5, 0.95, 0.0, 0.5, 0.7, 0.0, 0.2],
-        }
-    )
+    fliprate_table = create_fliprate_table_bydays()
     result = get_top_fliprates(fliprate_table, 2)
 
     assert result.top_normal_scores == {"test1": 0.5, "test3": 0.3}
@@ -248,37 +259,7 @@ def test_get_image_tables_from_fliprate_table_day_grouping() -> None:
     """Test producing the correct tables for heatmap generation
     from a fliprate table with grouping by days.
     """
-    fliprate_table = pd.DataFrame(
-        {
-            "timestamp": pd.to_datetime(
-                [
-                    "2021-07-01",
-                    "2021-07-01",
-                    "2021-07-01",
-                    "2021-07-02",
-                    "2021-07-02",
-                    "2021-07-02",
-                    "2021-07-03",
-                    "2021-07-03",
-                    "2021-07-03",
-                ]
-            ),
-            "test_identifier": [
-                "test1",
-                "test2",
-                "test3",
-                "test1",
-                "test2",
-                "test3",
-                "test1",
-                "test2",
-                "test3",
-            ],
-            "flip_rate": [0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 0.5, 0.0, 0.3],
-            "flip_rate_ewm": [0.0, 0.0, 0.5, 0.95, 0.0, 0.5, 0.7, 0.0, 0.2],
-        }
-    )
-
+    fliprate_table = create_fliprate_table_bydays()
     top_tests = {"test1", "test3"}
     top_tests_ewm = {"test1", "test3"}
 
@@ -314,14 +295,7 @@ def test_get_image_tables_from_fliprate_table_runs_grouping() -> None:
     """Test producing the correct tables for heatmap generation
     from a fliprate table with grouping by days.
     """
-    fliprate_table = pd.DataFrame(
-        {
-            "test_identifier": ["test1", "test2", "test1", "test2", "test1", "test2"],
-            "window": [1, 1, 2, 2, 3, 3],
-            "flip_rate": [0.0, 0.0, 1.0, 0.0, 0.5, 0.0],
-            "flip_rate_ewm": [0.0, 0.0, 0.95, 0.0, 0.7, 0.0],
-        }
-    )
+    fliprate_table = create_fliprate_table_byruns()
     top_tests = {"test1"}
     top_tests_ewm = {"test1"}
 
