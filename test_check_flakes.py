@@ -2,6 +2,7 @@ from check_flakes import (
     calc_fliprate,
     calculate_n_days_fliprate_table,
     calculate_n_runs_fliprate_table,
+    get_image_tables_from_fliprate_table,
     get_top_fliprates,
     non_overlapping_window_fliprate,
 )
@@ -241,3 +242,111 @@ def test_get_top_fliprates_from_day_windows() -> None:
 
     assert result.top_normal_scores == {"test1": 0.5, "test3": 0.3}
     assert result.top_ewm_scores == {"test1": 0.7, "test3": 0.2}
+
+
+def test_get_image_tables_from_fliprate_table_day_grouping() -> None:
+    """Test producing the correct tables for heatmap generation
+    from a fliprate table with grouping by days.
+    """
+    fliprate_table = pd.DataFrame(
+        {
+            "timestamp": pd.to_datetime(
+                [
+                    "2021-07-01",
+                    "2021-07-01",
+                    "2021-07-01",
+                    "2021-07-02",
+                    "2021-07-02",
+                    "2021-07-02",
+                    "2021-07-03",
+                    "2021-07-03",
+                    "2021-07-03",
+                ]
+            ),
+            "test_identifier": [
+                "test1",
+                "test2",
+                "test3",
+                "test1",
+                "test2",
+                "test3",
+                "test1",
+                "test2",
+                "test3",
+            ],
+            "flip_rate": [0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 0.5, 0.0, 0.3],
+            "flip_rate_ewm": [0.0, 0.0, 0.5, 0.95, 0.0, 0.5, 0.7, 0.0, 0.2],
+        }
+    )
+
+    top_tests = {"test1", "test3"}
+    top_tests_ewm = {"test1", "test3"}
+
+    result = get_image_tables_from_fliprate_table(
+        fliprate_table, top_tests, top_tests_ewm
+    )
+
+    expected_normal_table = pd.DataFrame(
+        {
+            "test_identifier": ["test1", "test3"],
+            "2021-07-01": [0.0, 0.5],
+            "2021-07-02": [1.0, 0.0],
+            "2021-07-03": [0.5, 0.3],
+        }
+    ).set_index("test_identifier")
+    expected_normal_table.columns = pd.to_datetime(expected_normal_table.columns)
+
+    expected_ewm_table = pd.DataFrame(
+        {
+            "test_identifier": ["test1", "test3"],
+            "2021-07-01": [0.0, 0.5],
+            "2021-07-02": [0.95, 0.5],
+            "2021-07-03": [0.7, 0.2],
+        }
+    ).set_index("test_identifier")
+    expected_ewm_table.columns = pd.to_datetime(expected_ewm_table.columns)
+
+    assert_frame_equal(result.normal_table, expected_normal_table, check_names=False)
+    assert_frame_equal(result.ewm_table, expected_ewm_table, check_names=False)
+
+
+def test_get_image_tables_from_fliprate_table_runs_grouping() -> None:
+    """Test producing the correct tables for heatmap generation
+    from a fliprate table with grouping by days.
+    """
+    fliprate_table = pd.DataFrame(
+        {
+            "test_identifier": ["test1", "test2", "test1", "test2", "test1", "test2"],
+            "window": [1, 1, 2, 2, 3, 3],
+            "flip_rate": [0.0, 0.0, 1.0, 0.0, 0.5, 0.0],
+            "flip_rate_ewm": [0.0, 0.0, 0.95, 0.0, 0.7, 0.0],
+        }
+    )
+    top_tests = {"test1"}
+    top_tests_ewm = {"test1"}
+
+    result = get_image_tables_from_fliprate_table(
+        fliprate_table, top_tests, top_tests_ewm
+    )
+
+    expected_normal_table = pd.DataFrame(
+        {
+            "test_identifier": ["test1"],
+            1: [0.0],
+            2: [1.0],
+            3: [0.5],
+        }
+    ).set_index("test_identifier")
+    expected_normal_table.columns = expected_normal_table.columns.astype(int)
+    expected_ewm_table = pd.DataFrame(
+        {
+            "test_identifier": ["test1"],
+            1: [0.0],
+            2: [0.95],
+            3: [0.7],
+        }
+    ).set_index("test_identifier")
+    expected_ewm_table.columns = expected_ewm_table.columns.astype(int)
+
+    assert_frame_equal(result.normal_table, expected_normal_table, check_names=False)
+    assert_frame_equal(result.ewm_table, expected_ewm_table, check_names=False)
