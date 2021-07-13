@@ -109,10 +109,8 @@ def calculate_n_runs_fliprate_table(
     return fliprate_table
 
 
-def get_top_fliprates_from_day_grouping(
-    fliprate_table: pd.DataFrame, top_n: int
-) -> PrintData:
-    """Look at the latest calculation timestamp for each test from the fliprate table
+def get_top_fliprates(fliprate_table: pd.DataFrame, top_n: int) -> PrintData:
+    """Look at the last calculation window for each test from the fliprate table
     and return the top n highest scoring test identifiers and their scores
     """
     last_window_values = fliprate_table.groupby("test_identifier").last()
@@ -124,33 +122,6 @@ def get_top_fliprates_from_day_grouping(
     top_fliprates_ewm = last_window_values.nlargest(top_n, "flip_rate_ewm")[
         ["flip_rate_ewm"]
     ].reset_index()
-
-    top_fliprates_dict = {
-        testname: score for testname, score in top_fliprates.to_records(index=False)
-    }
-
-    top_fliprates_ewm_dict = {
-        testname: score for testname, score in top_fliprates_ewm.to_records(index=False)
-    }
-
-    return PrintData(
-        top_normal_scores=top_fliprates_dict, top_ewm_scores=top_fliprates_ewm_dict
-    )
-
-
-def get_top_fliprates_from_run_grouping(
-    fliprate_table: pd.DataFrame, top_n: int, window_count: int
-) -> PrintData:
-    """Look at the latest calculation window from the fliprate table
-    and return the top n highest scoring test identifiers and their scores
-    """
-    top_fliprates = fliprate_table[fliprate_table["window"] == window_count].nlargest(
-        top_n, "flip_rate"
-    )[["test_identifier", "flip_rate"]]
-
-    top_fliprates_ewm = fliprate_table[
-        fliprate_table["window"] == window_count
-    ].nlargest(top_n, "flip_rate_ewm")[["test_identifier", "flip_rate_ewm"]]
 
     top_fliprates_dict = {
         testname: score for testname, score in top_fliprates.to_records(index=False)
@@ -283,14 +254,12 @@ if __name__ == "__main__":
         fliprate_table = calculate_n_days_fliprate_table(
             df, args.window_size, args.window_count
         )
-        printdata = get_top_fliprates_from_day_grouping(fliprate_table, args.top_n)
     else:
         fliprate_table = calculate_n_runs_fliprate_table(
             df, args.window_size, args.window_count
         )
-        printdata = get_top_fliprates_from_run_grouping(
-            fliprate_table, args.top_n, args.window_count
-        )
+
+    printdata = get_top_fliprates(fliprate_table, args.top_n)
 
     print(f"Top {args.top_n} flaky tests based on latest window fliprate")
     for testname, score in printdata.top_normal_scores.items():
