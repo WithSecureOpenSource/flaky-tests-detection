@@ -36,7 +36,7 @@ Github actions plugin to check flakiness of tests by calculating fliprates. Usag
 ### Heatmap generation
 * `--heatmap`
   * Turn heatmap generation on
-  * Two pictures generate: normal fliprate and exponentially weighted moving average fliprate score
+  * Two pictures generated: normal fliprate and exponentially weighted moving average fliprate score
   * Same parameters used as with the printed statistics
   
 ### Full examples
@@ -46,7 +46,7 @@ Github actions plugin to check flakiness of tests by calculating fliprates. Usag
 * `JUnit` files with calculations per 5 runs. 15 runs history and 5 tests printed out
   * `--junit-files=example_history/junit_files --grouping-option=runs --window-size=5 --window-count=3 --top-n=5`
 * Precomputed `test_history.csv` with daily calculations and heatmap generation. 1 day windows, 7 day history and 50 tests printed and generated to heatmaps.
- * `--test-history-csv=example_history/test_history.csv --grouping-option=days --window-size=1 --window-count=7 --top-n=50 --heatmap` 
+  * `--test-history-csv=example_history/test_history.csv --grouping-option=days --window-size=1 --window-count=7 --top-n=50 --heatmap` 
 
 ## Run tests
 
