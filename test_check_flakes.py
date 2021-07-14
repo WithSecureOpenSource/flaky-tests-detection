@@ -5,11 +5,13 @@ from check_flakes import (
     get_image_tables_from_fliprate_table,
     get_top_fliprates,
     non_overlapping_window_fliprate,
+    parse_junit_to_df,
 )
 
 import pandas as pd
 from pandas.testing import assert_frame_equal, assert_series_equal
 import pytest
+from _pytest.pytester import Testdir
 
 
 def create_test_history_df() -> pd.DataFrame:
@@ -324,3 +326,40 @@ def test_get_image_tables_from_fliprate_table_runs_grouping() -> None:
 
     assert_frame_equal(result.normal_table, expected_normal_table, check_names=False)
     assert_frame_equal(result.ewm_table, expected_ewm_table, check_names=False)
+
+
+def test_parse_junit_to_df(testdir: Testdir) -> None:
+    """Test junit file parsing to test history dataframe
+    by running pytest in tmp directory and producing xml file.
+    """
+    testdir.makepyfile(
+        """
+        import pytest
+
+
+        def test_failing():
+            assert False
+
+        def test_passing():
+            assert True
+
+        @pytest.mark.skip()
+        def test_skipped():
+            assert True
+    """
+    )
+
+    testdir.runpytest("--junit-xml=result.xml")
+    result_df = parse_junit_to_df(str(testdir))
+
+    assert list(result_df.columns) == ["test_identifier", "test_status"]
+    assert result_df.index.name == "timestamp"
+
+    expected_values = [
+        ("test_parse_junit_to_df::test_failing", "failure"),
+        ("test_parse_junit_to_df::test_passing", "pass"),
+        ("test_parse_junit_to_df::test_skipped", "skipped"),
+    ]
+
+    for result_value in result_df.itertuples(index=False, name=None):
+        assert result_value in expected_values
