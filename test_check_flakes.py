@@ -1,3 +1,10 @@
+from pathlib import Path
+
+import pandas as pd
+from pandas.testing import assert_frame_equal, assert_series_equal
+import pytest
+from _pytest.pytester import Testdir
+
 from check_flakes import (
     calc_fliprate,
     calculate_n_days_fliprate_table,
@@ -7,11 +14,6 @@ from check_flakes import (
     non_overlapping_window_fliprate,
     parse_junit_to_df,
 )
-
-import pandas as pd
-from pandas.testing import assert_frame_equal, assert_series_equal
-import pytest
-from _pytest.pytester import Testdir
 
 
 def create_test_history_df() -> pd.DataFrame:
@@ -350,7 +352,7 @@ def test_parse_junit_to_df(testdir: Testdir) -> None:
     )
 
     testdir.runpytest("--junit-xml=result.xml")
-    result_df = parse_junit_to_df(str(testdir))
+    result_df = parse_junit_to_df(Path(str(testdir)))
 
     assert list(result_df.columns) == ["test_identifier", "test_status"]
     assert result_df.index.name == "timestamp"

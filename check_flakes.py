@@ -1,5 +1,5 @@
 import argparse
-import glob
+from pathlib import Path
 from typing import Dict, NamedTuple, Set
 
 from junitparser import JUnitXml
@@ -170,11 +170,11 @@ def generate_image(image: pd.DataFrame, title: str, filename: str) -> None:
     plt.close()
 
 
-def parse_junit_to_df(folder_path: str) -> pd.DataFrame:
+def parse_junit_to_df(folderpath: Path) -> pd.DataFrame:
     """Read JUnit test result files to a test history dataframe"""
     dataframe_entries = []
 
-    for filepath in glob.iglob(f"{folder_path}/*.xml"):
+    for filepath in folderpath.glob("*.xml"):
         xml = JUnitXml.fromfile(filepath)
         for suite in xml:
             time = suite.timestamp
@@ -245,7 +245,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.junit_files:
-        df = parse_junit_to_df(args.junit_files)
+        df = parse_junit_to_df(Path(args.junit_files))
     else:
         df = pd.read_csv(
             args.test_history_csv,
