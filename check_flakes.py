@@ -180,7 +180,12 @@ def parse_junit_to_df(folder_path: str) -> pd.DataFrame:
             time = suite.timestamp
             for testcase in suite:
                 test_identifier = testcase.classname + "::" + testcase.name
-                test_status = 0 if len(testcase.result) == 0 else 1
+
+                # junitparser has "failure", "skipped" or "error" in result list if any
+                if len(testcase.result) == 0:
+                    test_status = "pass"
+                else:
+                    test_status = testcase.result[0]._tag
 
                 dataframe_entries.append(
                     {
