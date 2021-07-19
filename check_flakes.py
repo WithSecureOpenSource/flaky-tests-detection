@@ -1,4 +1,5 @@
 import argparse
+import logging
 from pathlib import Path
 from typing import Dict, NamedTuple, Set
 
@@ -206,6 +207,8 @@ if __name__ == "__main__":
     Also generate seaborn heatmaps visualizing the results if wanted.
     """
 
+    logging.basicConfig(format="%(message)s", level=logging.INFO)
+
     parser = argparse.ArgumentParser()
 
     group = parser.add_mutually_exclusive_group(required=True)
@@ -266,17 +269,18 @@ if __name__ == "__main__":
 
     printdata = get_top_fliprates(fliprate_table, args.top_n)
 
-    print(f"Top {args.top_n} flaky tests based on latest window fliprate")
+    logging.info("Top %s flaky tests based on latest window fliprate", args.top_n)
     for testname, score in printdata.top_normal_scores.items():
-        print(testname, "--- score:", score)
-    print(
-        f"\nTop {args.top_n} flaky tests based on latest window exponential weighted moving average fliprate score"
+        logging.info("%s --- score: %s", testname, score)
+    logging.info(
+        "\nTop %s flaky tests based on latest window exponential weighted moving average fliprate score",
+        args.top_n,
     )
     for testname, score in printdata.top_ewm_scores.items():
-        print(testname, "--- score:", score)
+        logging.info("%s --- score: %s", testname, score)
 
     if args.heatmap:
-        print("\n\nGenerating heatmap images...")
+        logging.info("\n\nGenerating heatmap images...")
         top_identifiers = set(printdata.top_normal_scores.keys())
         top_identifiers_ewm = set(printdata.top_normal_scores.keys())
 
@@ -296,4 +300,4 @@ if __name__ == "__main__":
             filename_ewm = f"{args.window_size}runs_flip_rate_ewm_top{args.top_n}.png"
         generate_image(tabledata.normal_table, title, filename)
         generate_image(tabledata.ewm_table, title_ewm, filename_ewm)
-        print(filename, "and", filename_ewm, "generated.")
+        logging.info("%s and %s generated.", filename, filename_ewm)
