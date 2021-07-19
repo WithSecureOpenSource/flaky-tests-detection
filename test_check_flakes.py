@@ -1,9 +1,12 @@
+import os
 from pathlib import Path
+import subprocess
 
 import pandas as pd
 from pandas.testing import assert_frame_equal, assert_series_equal
 import pytest
 from _pytest.pytester import Testdir
+from py._path.local import LocalPath
 
 from check_flakes import (
     calc_fliprate,
@@ -365,3 +368,67 @@ def test_parse_junit_to_df(testdir: Testdir) -> None:
 
     for result_value in result_df.itertuples(index=False, name=None):
         assert result_value in expected_values
+
+
+def test_full_usage_day_grouping(tmpdir: LocalPath) -> None:
+    """Test case to check that running the script with day grouping
+    produces the correctly named heatmaps.
+    """
+    original_path = os.getcwd()
+    test_history_path = os.path.join(tmpdir, "test_history.csv")
+    test_history = create_test_history_df()
+    test_history.to_csv(test_history_path)
+
+    script_path = os.path.join(os.getcwd(), "check_flakes.py")
+
+    os.chdir(tmpdir)
+
+    subprocess.run(
+        [
+            "python",
+            script_path,
+            "--test-history-csv=test_history.csv",
+            "--grouping-option=days",
+            "--window-size=1",
+            "--window-count=3",
+            "--top-n=2",
+            "--heatmap",
+        ]
+    )
+
+    files_in_tmpdir = os.listdir()
+    os.chdir(original_path)
+    assert "1day_flip_rate_top2.png" in files_in_tmpdir
+    assert "1day_flip_rate_ewm_top2.png" in files_in_tmpdir
+
+
+def test_full_usage_runs_grouping(tmpdir: LocalPath) -> None:
+    """Test case to check that running the script with grouping by runs
+    produces the correctly named heatmaps.
+    """
+    original_path = os.getcwd()
+    test_history_path = os.path.join(tmpdir, "test_history.csv")
+    test_history = create_test_history_df()
+    test_history.to_csv(test_history_path)
+
+    script_path = os.path.join(os.getcwd(), "check_flakes.py")
+
+    os.chdir(tmpdir)
+
+    subprocess.run(
+        [
+            "python",
+            script_path,
+            "--test-history-csv=test_history.csv",
+            "--grouping-option=runs",
+            "--window-size=2",
+            "--window-count=3",
+            "--top-n=1",
+            "--heatmap",
+        ]
+    )
+
+    files_in_tmpdir = os.listdir()
+    os.chdir(original_path)
+    assert "2runs_flip_rate_top1.png" in files_in_tmpdir
+    assert "2runs_flip_rate_ewm_top1.png" in files_in_tmpdir
