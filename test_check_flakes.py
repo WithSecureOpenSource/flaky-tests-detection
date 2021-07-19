@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
-import subprocess
+import runpy
+import sys
 
 import pandas as pd
 from pandas.testing import assert_frame_equal, assert_series_equal
@@ -383,21 +384,20 @@ def test_full_usage_day_grouping(tmpdir: LocalPath) -> None:
 
     os.chdir(tmpdir)
 
-    subprocess.run(
-        [
-            "python",
-            script_path,
-            "--test-history-csv=test_history.csv",
-            "--grouping-option=days",
-            "--window-size=1",
-            "--window-count=3",
-            "--top-n=2",
-            "--heatmap",
-        ]
-    )
+    sys.argv[1:] = [
+        "--test-history-csv=test_history.csv",
+        "--grouping-option=days",
+        "--window-size=1",
+        "--window-count=3",
+        "--top-n=2",
+        "--heatmap",
+    ]
+    runpy.run_path(path_name=script_path, run_name="__main__")
+    sys.argv[1:] = []
 
     files_in_tmpdir = os.listdir()
     os.chdir(original_path)
+
     assert "1day_flip_rate_top2.png" in files_in_tmpdir
     assert "1day_flip_rate_ewm_top2.png" in files_in_tmpdir
 
@@ -415,20 +415,19 @@ def test_full_usage_runs_grouping(tmpdir: LocalPath) -> None:
 
     os.chdir(tmpdir)
 
-    subprocess.run(
-        [
-            "python",
-            script_path,
-            "--test-history-csv=test_history.csv",
-            "--grouping-option=runs",
-            "--window-size=2",
-            "--window-count=3",
-            "--top-n=1",
-            "--heatmap",
-        ]
-    )
+    sys.argv[1:] = [
+        "--test-history-csv=test_history.csv",
+        "--grouping-option=runs",
+        "--window-size=2",
+        "--window-count=3",
+        "--top-n=1",
+        "--heatmap",
+    ]
+    runpy.run_path(path_name=script_path, run_name="__main__")
+    sys.argv[1:] = []
 
     files_in_tmpdir = os.listdir()
     os.chdir(original_path)
+
     assert "2runs_flip_rate_top1.png" in files_in_tmpdir
     assert "2runs_flip_rate_ewm_top1.png" in files_in_tmpdir
