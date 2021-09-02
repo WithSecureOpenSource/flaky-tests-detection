@@ -364,11 +364,12 @@ def test_parse_junit_to_df(testdir: Testdir) -> None:
     expected_values = [
         ("test_parse_junit_to_df::test_failing", "failure"),
         ("test_parse_junit_to_df::test_passing", "pass"),
-        ("test_parse_junit_to_df::test_skipped", "skipped"),
     ]
+    skipped = ("test_parse_junit_to_df::test_skipped", "skipped")
 
     for result_value in result_df.itertuples(index=False, name=None):
         assert result_value in expected_values
+        assert result_value != skipped
 
 
 def test_full_usage_day_grouping(tmpdir: LocalPath) -> None:
