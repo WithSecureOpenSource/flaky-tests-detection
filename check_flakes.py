@@ -183,10 +183,12 @@ def parse_junit_to_df(folderpath: Path) -> pd.DataFrame:
                 test_identifier = testcase.classname + "::" + testcase.name
 
                 # junitparser has "failure", "skipped" or "error" in result list if any
-                if len(testcase.result) == 0:
+                if not testcase.result:
                     test_status = "pass"
                 else:
                     test_status = testcase.result[0]._tag
+                    if test_status == "skipped":
+                        continue
 
                 dataframe_entries.append(
                     {
