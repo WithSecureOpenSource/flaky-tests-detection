@@ -66,6 +66,7 @@ def calculate_n_days_fliprate_table(
     testrun_table: pd.DataFrame, days: int, window_count: int
 ) -> pd.DataFrame:
     """Select given history amount and calculate fliprates for given n day windows.
+
     Return a table containing the results.
     """
     data = testrun_table[
@@ -85,7 +86,7 @@ def calculate_n_days_fliprate_table(
         .droplevel("test_identifier")
     )
 
-    return fliprate_table
+    return fliprate_table[fliprate_table.flip_rate != 0]
 
 
 def calculate_n_runs_fliprate_table(
@@ -107,7 +108,7 @@ def calculate_n_runs_fliprate_table(
     )
     fliprate_table = fliprate_table.rename(columns={"level_1": "window"})
 
-    return fliprate_table
+    return fliprate_table[fliprate_table.flip_rate != 0]
 
 
 def get_top_fliprates(fliprate_table: pd.DataFrame, top_n: int) -> PrintData:

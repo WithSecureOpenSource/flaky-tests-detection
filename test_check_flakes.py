@@ -202,15 +202,13 @@ def test_calculate_n_days_fliprate_table():
             "timestamp": pd.to_datetime(
                 [
                     "2021-07-01",
-                    "2021-07-01",
                     "2021-07-02",
-                    "2021-07-02",
-                    "2021-07-03",
                     "2021-07-03",
                 ]
             ),
-            "test_identifier": ["test1", "test2", "test1", "test2", "test1", "test2"],
-        }
+            "test_identifier": ["test1", "test1", "test1"],
+        },
+        index=[0, 2, 4]
     )
     # check other than fliprate values correctness
     assert_frame_equal(result_fliprate_table, expected_fliprate_table)
@@ -237,12 +235,50 @@ def test_calculate_n_runs_fliprate_table():
 
     expected_fliprate_table = pd.DataFrame(
         {
-            "test_identifier": ["test1", "test1", "test1", "test2", "test2", "test2"],
-            "window": [1, 2, 3, 1, 2, 3],
+            "test_identifier": ["test1", "test1", "test1"],
+            "window": [1, 2, 3],
         }
     )
 
     # check other than fliprate values correctness
+    assert_frame_equal(result_fliprate_table, expected_fliprate_table)
+
+
+def test_no_zero_score_from_day_windows():
+    df = create_test_history_df()
+    result_fliprate_table = calculate_n_days_fliprate_table(df, 1, 3)
+    expected_fliprate_table = pd.DataFrame(
+        {
+            "timestamp": pd.to_datetime(
+                [
+                    "2021-07-01",
+                    "2021-07-02",
+                    "2021-07-03",
+                ]
+            ),
+            "test_identifier": ["test1", "test1", "test1"],
+            "flip_rate": [1.0, 1.0, 0.5],
+            "flip_rate_ewm": [1.0, 1.0, 0.95],
+
+        },
+        index=[0, 2, 4]
+    )
+    # check other than fliprate values correctness
+    assert_frame_equal(result_fliprate_table, expected_fliprate_table)
+
+
+def test_no_zero_score_from_n_runs():
+    df = create_test_history_df()
+    result_fliprate_table = calculate_n_runs_fliprate_table(df, 2, 3)
+    expected_fliprate_table = pd.DataFrame(
+        {
+            "test_identifier": ["test1", "test1", "test1"],
+            "window": [1, 2, 3],
+            "flip_rate": [1.0, 1.0, 1.0],
+            "flip_rate_ewm": [1.0, 1.0, 1.0],
+
+        }
+    )
     assert_frame_equal(result_fliprate_table, expected_fliprate_table)
 
 
