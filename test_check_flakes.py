@@ -22,6 +22,7 @@ from check_flakes import (
 
 def create_test_history_df() -> pd.DataFrame:
     """Create some fake test history.
+
     test1 is flaky.
     """
     timestamps = [
@@ -81,7 +82,7 @@ def create_test_history_df() -> pd.DataFrame:
     return df
 
 
-def create_fliprate_table_bydays() -> pd.DataFrame:
+def create_fliprate_table_by_days() -> pd.DataFrame:
     """Create a fliprate table for tests with grouping by days"""
     fliprate_table = pd.DataFrame(
         {
@@ -116,7 +117,7 @@ def create_fliprate_table_bydays() -> pd.DataFrame:
     return fliprate_table
 
 
-def create_fliprate_table_byruns() -> pd.DataFrame:
+def create_fliprate_table_by_runs() -> pd.DataFrame:
     """Create a fliprate table for tests with grouping by runs"""
     fliprate_table = pd.DataFrame(
         {
@@ -138,7 +139,7 @@ def create_fliprate_table_byruns() -> pd.DataFrame:
         ([0, 1, 0, 1], 1),
     ],
 )
-def test_calc_fliprate(test_input, expected) -> None:
+def test_calc_fliprate(test_input, expected):
     """Test fliprate calculation for different test histories"""
     test_results = pd.Series(test_input)
     assert calc_fliprate(test_results) == expected
@@ -165,7 +166,7 @@ def test_calc_fliprate(test_input, expected) -> None:
         ),
     ],
 )
-def test_non_overlapping_window_fliprate(test_input, expected) -> None:
+def test_non_overlapping_window_fliprate(test_input, expected):
     """Test different window fliprate calculations"""
     test_results = pd.Series(test_input[0])
     window_size = test_input[1]
@@ -177,7 +178,7 @@ def test_non_overlapping_window_fliprate(test_input, expected) -> None:
     assert_series_equal(result, expected_result)
 
 
-def test_calculate_n_days_fliprate_table() -> None:
+def test_calculate_n_days_fliprate_table():
     """Test calculation of the fliprate table with valid daily grouping settings.
     Ignore checking correctness of flip_rate and flip_rate_ewm numeric values.
     """
@@ -215,7 +216,7 @@ def test_calculate_n_days_fliprate_table() -> None:
     assert_frame_equal(result_fliprate_table, expected_fliprate_table)
 
 
-def test_calculate_n_runs_fliprate_table() -> None:
+def test_calculate_n_runs_fliprate_table():
     """Test calculation of the fliprate table with valid grouping by runs settings.
     Ignore checking correctness of flip_rate and flip_rate_ewm numeric values.
     """
@@ -245,29 +246,29 @@ def test_calculate_n_runs_fliprate_table() -> None:
     assert_frame_equal(result_fliprate_table, expected_fliprate_table)
 
 
-def test_get_top_fliprates_from_run_windows() -> None:
+def test_get_top_fliprates_from_run_windows():
     """Test calculating the top fliprates from fliprate table with n runs group windows"""
-    fliprate_table = create_fliprate_table_byruns()
+    fliprate_table = create_fliprate_table_by_runs()
     result = get_top_fliprates(fliprate_table, 1)
 
     assert result.top_normal_scores == {"test1": 0.5}
     assert result.top_ewm_scores == {"test1": 0.7}
 
 
-def test_get_top_fliprates_from_day_windows() -> None:
+def test_get_top_fliprates_from_day_windows():
     """Test calculating the top fliprates from fliprate table with n days group windows"""
-    fliprate_table = create_fliprate_table_bydays()
+    fliprate_table = create_fliprate_table_by_days()
     result = get_top_fliprates(fliprate_table, 2)
 
     assert result.top_normal_scores == {"test1": 0.5, "test3": 0.3}
     assert result.top_ewm_scores == {"test1": 0.7, "test3": 0.2}
 
 
-def test_get_image_tables_from_fliprate_table_day_grouping() -> None:
+def test_get_image_tables_from_fliprate_table_day_grouping():
     """Test producing the correct tables for heatmap generation
     from a fliprate table with grouping by days.
     """
-    fliprate_table = create_fliprate_table_bydays()
+    fliprate_table = create_fliprate_table_by_days()
     top_tests = {"test1", "test3"}
     top_tests_ewm = {"test1", "test3"}
 
@@ -299,11 +300,11 @@ def test_get_image_tables_from_fliprate_table_day_grouping() -> None:
     assert_frame_equal(result.ewm_table, expected_ewm_table, check_names=False)
 
 
-def test_get_image_tables_from_fliprate_table_runs_grouping() -> None:
+def test_get_image_tables_from_fliprate_table_runs_grouping():
     """Test producing the correct tables for heatmap generation
     from a fliprate table with grouping by days.
     """
-    fliprate_table = create_fliprate_table_byruns()
+    fliprate_table = create_fliprate_table_by_runs()
     top_tests = {"test1"}
     top_tests_ewm = {"test1"}
 
@@ -334,7 +335,7 @@ def test_get_image_tables_from_fliprate_table_runs_grouping() -> None:
     assert_frame_equal(result.ewm_table, expected_ewm_table, check_names=False)
 
 
-def test_parse_junit_to_df(testdir: Testdir) -> None:
+def test_parse_junit_to_df(testdir: Testdir):
     """Test junit file parsing to test history dataframe
     by running pytest in tmp directory and producing xml file.
     """
@@ -372,7 +373,7 @@ def test_parse_junit_to_df(testdir: Testdir) -> None:
         assert result_value != skipped
 
 
-def test_full_usage_day_grouping(tmpdir: LocalPath) -> None:
+def test_full_usage_day_grouping(tmpdir: LocalPath):
     """Test case to check that running the script with day grouping
     produces the correctly named heatmaps.
     """
@@ -403,7 +404,7 @@ def test_full_usage_day_grouping(tmpdir: LocalPath) -> None:
     assert "1day_flip_rate_ewm_top2.png" in files_in_tmpdir
 
 
-def test_full_usage_runs_grouping(tmpdir: LocalPath) -> None:
+def test_full_usage_runs_grouping(tmpdir: LocalPath):
     """Test case to check that running the script with grouping by runs
     produces the correctly named heatmaps.
     """
