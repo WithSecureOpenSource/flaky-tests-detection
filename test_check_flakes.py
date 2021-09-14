@@ -208,7 +208,7 @@ def test_calculate_n_days_fliprate_table():
             ),
             "test_identifier": ["test1", "test1", "test1"],
         },
-        index=[0, 2, 4]
+        index=[0, 2, 4],
     )
     # check other than fliprate values correctness
     assert_frame_equal(result_fliprate_table, expected_fliprate_table)
@@ -259,9 +259,8 @@ def test_no_zero_score_from_day_windows():
             "test_identifier": ["test1", "test1", "test1"],
             "flip_rate": [1.0, 1.0, 0.5],
             "flip_rate_ewm": [1.0, 1.0, 0.95],
-
         },
-        index=[0, 2, 4]
+        index=[0, 2, 4],
     )
     # check other than fliprate values correctness
     assert_frame_equal(result_fliprate_table, expected_fliprate_table)
@@ -276,7 +275,6 @@ def test_no_zero_score_from_n_runs():
             "window": [1, 2, 3],
             "flip_rate": [1.0, 1.0, 1.0],
             "flip_rate_ewm": [1.0, 1.0, 1.0],
-
         }
     )
     assert_frame_equal(result_fliprate_table, expected_fliprate_table)
