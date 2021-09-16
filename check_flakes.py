@@ -225,7 +225,7 @@ if __name__ == "__main__":
         required=True,
     )
     parser.add_argument(
-        "--precision, -P",
+        "--precision, -p",
         type=int,
         help="Precision of the flip rate score, default is 4",
         default=4,
