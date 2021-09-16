@@ -1,4 +1,6 @@
 import os
+from datetime import datetime, timedelta
+from decimal import getcontext, ROUND_UP, Decimal
 from pathlib import Path
 import runpy
 import sys
@@ -18,6 +20,37 @@ from check_flakes import (
     non_overlapping_window_fliprate,
     parse_junit_to_df,
 )
+
+
+def create_long_test_history_df() -> pd.DataFrame:
+    time_format = "%Y-%m-%d %H:%M:%S"
+    timestamp = datetime.strptime("2021-07-01 07:00:00", time_format)
+    test_id1 = "test1"
+    test_id2 = "test2"
+    timestamps = []
+    test_identifiers = []
+    test_statutes = []
+    for index in range(1, 101):
+        timestamps.append(timestamp + timedelta(days=index))
+        if index % 2 == 0:
+            test_identifiers.append(test_id2)
+            test_statutes.append("pass")
+        else:
+            test_identifiers.append(test_id1)
+            if index % 11 == 0:
+                test_statutes.append("fail")
+            else:
+                test_statutes.append("pass")
+    df = pd.DataFrame(
+        {
+            "timestamp": timestamps,
+            "test_identifier": test_identifiers,
+            "test_status": test_statutes,
+        }
+    )
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df = df.set_index("timestamp").sort_index()
+    return df
 
 
 def create_test_history_df() -> pd.DataFrame:
@@ -193,9 +226,7 @@ def test_calculate_n_days_fliprate_table():
         "flip_rate_ewm",
     ]
 
-    result_fliprate_table = result_fliprate_table.drop(
-        ["flip_rate", "flip_rate_ewm"], axis=1
-    )
+    result_fliprate_table = result_fliprate_table.drop(["flip_rate", "flip_rate_ewm"], axis=1)
 
     expected_fliprate_table = pd.DataFrame(
         {
@@ -229,9 +260,7 @@ def test_calculate_n_runs_fliprate_table():
         "flip_rate_ewm",
     ]
 
-    result_fliprate_table = result_fliprate_table.drop(
-        ["flip_rate", "flip_rate_ewm"], axis=1
-    )
+    result_fliprate_table = result_fliprate_table.drop(["flip_rate", "flip_rate_ewm"], axis=1)
 
     expected_fliprate_table = pd.DataFrame(
         {
@@ -280,22 +309,45 @@ def test_no_zero_score_from_n_runs():
     assert_frame_equal(result_fliprate_table, expected_fliprate_table)
 
 
+def test_get_top_fliprates_uses_precision(tmpdir: LocalPath):
+    df = create_long_test_history_df()
+    result_fliprate_table = calculate_n_days_fliprate_table(df, 10, 3)
+    printdata = get_top_fliprates(result_fliprate_table, 10, 4)
+    for scores in printdata:
+        for test, score in scores.items():
+            assert len(str(score)) <= 6
+
+
 def test_get_top_fliprates_from_run_windows():
     """Test calculating the top fliprates from fliprate table with n runs group windows"""
     fliprate_table = create_fliprate_table_by_runs()
-    result = get_top_fliprates(fliprate_table, 1)
+    result = get_top_fliprates(fliprate_table, 1, 4)
 
-    assert result.top_normal_scores == {"test1": 0.5}
-    assert result.top_ewm_scores == {"test1": 0.7}
+    context = getcontext()
+    context.prec = 4
+    context.rounding = ROUND_UP
+    assert result.top_normal_scores == {"test1": Decimal(0.5) * 1}
+    assert result.top_ewm_scores == {"test1": Decimal(0.7) * 1}
+    for score in result.top_normal_scores.values():
+        assert len(str(score)) <= 6
+    for score in result.top_ewm_scores.values():
+        assert len(str(score)) <= 6
 
 
 def test_get_top_fliprates_from_day_windows():
     """Test calculating the top fliprates from fliprate table with n days group windows"""
     fliprate_table = create_fliprate_table_by_days()
-    result = get_top_fliprates(fliprate_table, 2)
+    result = get_top_fliprates(fliprate_table, 2, 2)
 
-    assert result.top_normal_scores == {"test1": 0.5, "test3": 0.3}
-    assert result.top_ewm_scores == {"test1": 0.7, "test3": 0.2}
+    context = getcontext()
+    context.prec = 2
+    context.rounding = ROUND_UP
+    assert result.top_normal_scores == {"test1": Decimal(0.5) * 1, "test3": Decimal(0.3) * 1}
+    assert result.top_ewm_scores == {"test1": Decimal(0.7) * 1, "test3": Decimal(0.2) * 1}
+    for score in result.top_normal_scores.values():
+        assert len(str(score)) <= 4
+    for score in result.top_ewm_scores.values():
+        assert len(str(score)) <= 4
 
 
 def test_get_image_tables_from_fliprate_table_day_grouping():
@@ -306,9 +358,7 @@ def test_get_image_tables_from_fliprate_table_day_grouping():
     top_tests = {"test1", "test3"}
     top_tests_ewm = {"test1", "test3"}
 
-    result = get_image_tables_from_fliprate_table(
-        fliprate_table, top_tests, top_tests_ewm
-    )
+    result = get_image_tables_from_fliprate_table(fliprate_table, top_tests, top_tests_ewm)
 
     expected_normal_table = pd.DataFrame(
         {
@@ -342,9 +392,7 @@ def test_get_image_tables_from_fliprate_table_runs_grouping():
     top_tests = {"test1"}
     top_tests_ewm = {"test1"}
 
-    result = get_image_tables_from_fliprate_table(
-        fliprate_table, top_tests, top_tests_ewm
-    )
+    result = get_image_tables_from_fliprate_table(fliprate_table, top_tests, top_tests_ewm)
 
     expected_normal_table = pd.DataFrame(
         {
