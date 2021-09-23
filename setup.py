@@ -17,7 +17,6 @@ DEV_REQUIRE = [
 ]
 NAME = "flaky_tests_detection"
 NAME_DASHED = NAME.replace("_", "-")
-OLD_GIT_URL = "fliprate_actions"  # Are we going to change repo name?
 
 init_content: Dict[str, str] = {}
 init_path = convert_path('flaky_tests_detection/__init__.py')
@@ -32,14 +31,14 @@ setup(
     long_description_content_type="text/markdown",
     author="Eero Kauhanen, Matvey Pashkovskiy, Alexey Vyskubov",
     author_email="", # warning: check: missing meta-data: if 'author' supplied, 'author_email' must be supplied too
-    url=f"https://github.com/F-Secure/{OLD_GIT_URL}",  # Are we going to change repo name?
+    url=f"https://github.com/F-Secure/{NAME_DASHED}",
     license="Apache License 2.0",
     platforms="any",
     version=init_content["__version__"],
     packages=find_packages(exclude=[f"{NAME}.tests", f"{NAME}.tests.*"]),
     entry_points={
         "console_scripts": [
-            "check_flakes=flaky_tests_detection.check_flakes:main",  # What should be CLI name for entry point?
+            "flaky=flaky_tests_detection.check_flakes:main",
         ]
     },
     install_requires=["pandas", "junitparser", "seaborn", "matplotlib"],

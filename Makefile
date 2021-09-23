@@ -34,4 +34,4 @@ clean:
 
 publish: install_dev
 	. $(VENV)/bin/activate
-	semantic-release --noop --verbosity=DEBUG publish -D version_variable=flaky_tests_detection/__init__.py:__version__
+	$(VENV_DIR)/bin/semantic-release --noop --verbosity=DEBUG publish -D version_variable=flaky_tests_detection/__init__.py:__version__
