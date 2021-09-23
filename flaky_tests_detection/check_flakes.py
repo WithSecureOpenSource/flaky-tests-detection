@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import sys
 
 EWM_ALPHA = 0.1
 EWM_ADJUST = False
@@ -185,7 +186,7 @@ def parse_junit_to_df(folderpath: Path) -> pd.DataFrame:
     return df
 
 
-if __name__ == "__main__":
+def main(argv):
     """Print out top flaky tests and their fliprate scores.
     Also generate seaborn heatmaps visualizing the results if wanted.
     """
@@ -283,3 +284,7 @@ if __name__ == "__main__":
         generate_image(tabledata.normal_table, title, filename)
         generate_image(tabledata.ewm_table, title_ewm, filename_ewm)
         logging.info("%s and %s generated.", filename, filename_ewm)
+
+
+if __name__ == "__main__":
+    main(sys.argv)

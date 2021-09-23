@@ -11,7 +11,7 @@ import pytest
 from _pytest.pytester import Testdir
 from py._path.local import LocalPath
 
-from check_flakes import (
+from flaky_tests_detection.check_flakes import (
     calc_fliprate,
     calculate_n_days_fliprate_table,
     calculate_n_runs_fliprate_table,
@@ -464,7 +464,7 @@ def test_full_usage_day_grouping(tmpdir: LocalPath):
     test_history = create_test_history_df()
     test_history.to_csv(test_history_path)
 
-    script_path = os.path.join(os.getcwd(), "check_flakes.py")
+    script_path = os.path.join(os.getcwd(), "flaky_tests_detection/check_flakes.py")
 
     os.chdir(tmpdir)
 
@@ -495,7 +495,7 @@ def test_full_usage_runs_grouping(tmpdir: LocalPath):
     test_history = create_test_history_df()
     test_history.to_csv(test_history_path)
 
-    script_path = os.path.join(os.getcwd(), "check_flakes.py")
+    script_path = os.path.join(os.getcwd(), "flaky_tests_detection/check_flakes.py")
 
     os.chdir(tmpdir)
 

@@ -1,0 +1,38 @@
+VENV = .venv
+PIP = $(VENV)/bin/pip
+PYTHON = $(VENV)/bin/python3
+
+
+venv: setup.py
+	test -d $(VENV) || python3 -m venv $(VENV)
+
+
+install: requirements.txt venv
+	. $(VENV)/bin/activate
+	$(PYTHON) -m pip install --upgrade pip
+	$(PIP) install -r requirements.txt
+
+
+install_dev: requirements.txt requirements-dev.txt venv
+	. $(VENV)/bin/activate
+	$(PYTHON) -m pip install --upgrade pip
+	$(PIP) install -r requirements.txt
+	$(PIP) install -r requirements-dev.txt
+
+
+run_test: install_dev
+	. $(VENV)/bin/activate
+	$(PYTHON) -m pytest
+
+
+clean:
+	rm -rf .pytest_cache
+	rm -rf flaky_tests_detection/__pycache__
+	rm -rf flaky_tests_detection.egg-info
+	rm -rf tests/__pycache__
+	rm -rf $(VENV)
+
+
+publish: install_dev
+	. $(VENV)/bin/activate
+	semantic-release --noop --verbosity=DEBUG publish -D version_variable=flaky_tests_detection/__init__.py:__version__
