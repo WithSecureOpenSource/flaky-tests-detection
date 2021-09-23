@@ -20,8 +20,6 @@ jobs:
           max-header-length: 255
 
   release:
-    needs: test
-    if: github.ref == 'refs/heads/master'
     name: Publish
     runs-on: ubuntu-latest
     steps:

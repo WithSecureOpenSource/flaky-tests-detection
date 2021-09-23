@@ -7,17 +7,16 @@ venv: setup.py
 	test -d $(VENV) || python3 -m venv $(VENV)
 
 
-install: requirements.txt venv
+install: venv
 	. $(VENV)/bin/activate
 	$(PYTHON) -m pip install --upgrade pip
-	$(PIP) install -r requirements.txt
+	$(PYTHON) -m pip install -e .
 
 
-install_dev: requirements.txt requirements-dev.txt venv
+install_dev: venv
 	. $(VENV)/bin/activate
 	$(PYTHON) -m pip install --upgrade pip
-	$(PIP) install -r requirements.txt
-	$(PIP) install -r requirements-dev.txt
+	$(PYTHON) -m pip install -e .[dev]
 
 
 run_test: install_dev

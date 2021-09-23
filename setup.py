@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 from distutils.util import convert_path
+from typing import Dict
 
 
 def _read_long_description():
@@ -18,7 +19,7 @@ NAME = "flaky_tests_detection"
 NAME_DASHED = NAME.replace("_", "-")
 OLD_GIT_URL = "fliprate_actions"  # Are we going to change repo name?
 
-init_content = {}
+init_content: Dict[str, str] = {}
 init_path = convert_path('flaky_tests_detection/__init__.py')
 with open(init_path) as init_file:
     exec(init_file.read(), init_content)
@@ -32,7 +33,7 @@ setup(
     author="Eero Kauhanen, Matvey Pashkovskiy, Alexey Vyskubov",
     author_email="", # warning: check: missing meta-data: if 'author' supplied, 'author_email' must be supplied too
     url=f"https://github.com/F-Secure/{OLD_GIT_URL}",  # Are we going to change repo name?
-    license="Apache License 2.0",  # Which license?
+    license="Apache License 2.0",
     platforms="any",
     version=init_content["__version__"],
     packages=find_packages(exclude=[f"{NAME}.tests", f"{NAME}.tests.*"]),
