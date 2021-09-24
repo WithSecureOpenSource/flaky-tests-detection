@@ -1,2 +1,2 @@
 #!/bin/sh
-python /check_flakes.py $*
+python flaky_tests_detection/check_flakes.py $*

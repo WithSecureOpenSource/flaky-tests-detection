@@ -1,7 +1,7 @@
 FROM python:3.9-slim-buster
 
-COPY check_flakes.py entrypoint.sh requirements.txt /
+COPY flaky_tests_detection entrypoint.sh /
 
-RUN pip install -r requirements.txt
+RUN pip install -e .
 
 ENTRYPOINT ["/entrypoint.sh"]
