@@ -1,6 +1,6 @@
 FROM python:3.9-slim-buster
 
-COPY flaky_tests_detection entrypoint.sh /
+COPY setup.py flaky_tests_detection entrypoint.sh /
 
 RUN pip install -e .
 
