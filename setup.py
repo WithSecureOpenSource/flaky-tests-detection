@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages
 from distutils.util import convert_path
 from typing import Dict
+import subprocess
 
 
 def _read_long_description():
@@ -8,6 +9,12 @@ def _read_long_description():
         return readme.read()
 
 
+GIT_VERSION = (
+    subprocess.check_output("git describe --always".split())
+    .strip()
+    .decode("ascii")
+    .replace("v", "", 1)
+)
 DEV_REQUIRE = [
     "pytest",
     "pytest-cov",
@@ -17,11 +24,6 @@ DEV_REQUIRE = [
 ]
 NAME = "flaky_tests_detection"
 NAME_DASHED = NAME.replace("_", "-")
-
-init_content: Dict[str, str] = {}
-init_path = convert_path('flaky_tests_detection/__init__.py')
-with open(init_path) as init_file:
-    exec(init_file.read(), init_content)
 
 
 setup(
@@ -34,7 +36,7 @@ setup(
     url=f"https://github.com/F-Secure/{NAME_DASHED}",
     license="Apache License 2.0",
     platforms="any",
-    version=init_content["__version__"],
+    version=GIT_VERSION,
     packages=find_packages(exclude=[f"{NAME}.tests", f"{NAME}.tests.*"]),
     entry_points={
         "console_scripts": [

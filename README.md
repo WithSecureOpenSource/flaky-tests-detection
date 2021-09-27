@@ -1,4 +1,4 @@
-# fliprate_actions
+# flaky_tests_detection
 
 Github actions plugin to check flakiness of tests by calculating fliprates. Usage demonstrated [here](https://github.com/guotin/flaky-test-ci) at the `actions` page.
 
@@ -48,6 +48,14 @@ Github actions plugin to check flakiness of tests by calculating fliprates. Usag
 * Precomputed `test_history.csv` with daily calculations and heatmap generation. 1 day windows, 7 day history and 50 tests printed and generated to heatmaps.
   * `--test-history-csv=example_history/test_history.csv --grouping-option=days --window-size=1 --window-count=7 --top-n=50 --heatmap` 
 
+## Normal installation
+
+* `make install`
+
+## Development installation
+
+* `make install_dev`
+
 ## Run tests
 
-* `pip install -r requirements.txt -r requirements-dev.txt` and `pytest`
+* `make run_test`
