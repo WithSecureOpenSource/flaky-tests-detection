@@ -1,5 +1,2 @@
 #!/bin/sh
-
-. .venv/bin/activate
-flaky "$*"
-deactivate
+python /check_flakes.py $*
