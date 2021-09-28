@@ -29,7 +29,7 @@ setup(
     description="Github actions plugin to check flakiness of tests by calculating fliprates.",
     long_description=_read_long_description(),
     long_description_content_type="text/markdown",
-    author="Eero Kauhanen, Matvey Pashkovskiy, Alexey Vyskubov",
+    author="Eero Kauhanen, Matvey Pashkovskiy, Alexey Vyskubov, Tatu Aalto, Joona Oikarinen",
     author_email="", # warning: check: missing meta-data: if 'author' supplied, 'author_email' must be supplied too
     url=f"https://github.com/F-Secure/{NAME_DASHED}",
     license="Apache License 2.0",
