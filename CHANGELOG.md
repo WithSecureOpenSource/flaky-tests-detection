@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v1.0.2 (2021-09-28)
+### Fix
+* Increase version number ([`e80eebe`](https://github.com/F-Secure/flaky-tests-detection/commit/e80eebe1df9d547cfcc60dc56554241c525778b0))
+
 ## v1.0.1 (2021-09-28)
 ### Fix
 * Change setup.py author list ([`c86ed0e`](https://github.com/F-Secure/flaky-tests-detection/commit/c86ed0ecd3556d0ab96962d2daddf51e409c2a57))
