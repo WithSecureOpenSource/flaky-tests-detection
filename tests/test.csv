@@ -1,0 +1,14 @@
+timestamp,test_identifier,test_status
+2021-07-01 07:00:00,test1,pass
+2021-07-01 07:00:00,test2,pass
+2021-07-01 08:00:00,test1,fail
+2021-07-01 08:00:00,test2,pass
+2021-07-02 07:00:00,test1,pass
+2021-07-02 07:00:00,test2,pass
+2021-07-02 08:00:00,test1,fail
+2021-07-02 08:00:00,test2,pass
+2021-07-03 07:00:00,test1,pass
+2021-07-03 07:00:00,test2,pass
+2021-07-03 08:00:00,test1,pass
+2021-07-03 08:00:00,test2,pass
+2021-07-03 09:00:00,test1,fail
