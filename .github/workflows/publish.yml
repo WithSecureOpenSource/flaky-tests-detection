@@ -19,9 +19,27 @@ jobs:
         with:
           max-header-length: 255
 
+  test:
+    name: Run pytest
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install dependencies
+        run: pip install -e .[dev]
+      - name: Run mypy
+        run: mypy . --ignore-missing-imports
+      - name: Run tests
+        run: pytest --cov=.
+
   release:
     if: github.ref == 'refs/heads/master'
     name: Publish
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
