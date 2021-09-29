@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v1.0.3 (2021-09-29)
+### Fix
+* Retrieve setup.py version from __init__.py ([`8d1a998`](https://github.com/F-Secure/flaky-tests-detection/commit/8d1a998ffb952459afbd213551c8e2d315048034))
+
 ## v1.0.2 (2021-09-28)
 ### Fix
 * Increase version number ([`e80eebe`](https://github.com/F-Secure/flaky-tests-detection/commit/e80eebe1df9d547cfcc60dc56554241c525778b0))
