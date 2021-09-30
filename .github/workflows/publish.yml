@@ -3,9 +3,10 @@ name: publish
 on:
   push:
     branches:
-      - '**'
-    tags-ignore:
-      - '**'
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   check:
@@ -52,7 +53,7 @@ jobs:
           docker run flaky-docker --test-history-csv=test.csv --grouping-option=runs --window-size=2 --window-count=5 --top-n=5 --heatmap
 
   release:
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     name: Publish
     needs: build-and-run-docker-image
     runs-on: ubuntu-latest
