@@ -2,6 +2,8 @@
 
 Github actions plugin to check flakiness of tests by calculating fliprates. Usage demonstrated [here](https://github.com/guotin/flaky-test-ci) at the `actions` page.
 
+Implementation is based on ["Modeling and ranking flaky tests at Apple"](https://dl.acm.org/doi/10.1145/3377813.3381370) by Kowalczyk, Emily & Nair, Karan & Gao, Zebao & Silberstein, Leo & Long, Teng & Memon, Atif.
+
 ## Features
 
 * Prints out top test names and their latest calculation window scores (normal fliprate and exponentially weighted moving average fliprate that take previous calculation windows into account).
@@ -59,3 +61,12 @@ Github actions plugin to check flakiness of tests by calculating fliprates. Usag
 ## Run pytest
 
 * `make run_test`
+
+## Acknowledgement
+
+The package was developed by [F-Secure Corporation][f-secure] and [University of Helsinki][hy] in scope of [IVVES project][ivves]. This work was labelled by [ITEA3][itea3] and funded by local authorities under grant agreement “ITEA-2019-18022-IVVES”
+
+[ivves]: http://ivves.eu/
+[itea3]: https://itea3.org/
+[f-secure]: https://www.f-secure.com/en
+[hy]: https://www.helsinki.fi/en/computer-science
