@@ -1,4 +1,5 @@
 import os
+import subprocess
 from datetime import datetime, timedelta
 from decimal import getcontext, ROUND_UP, Decimal
 from pathlib import Path
@@ -102,6 +103,65 @@ def create_test_history_df() -> pd.DataFrame:
         "pass",
         "pass",
         "fail",
+    ]
+    df = pd.DataFrame(
+        {
+            "timestamp": timestamps,
+            "test_identifier": test_identifiers,
+            "test_status": test_statutes,
+        }
+    )
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df = df.set_index("timestamp").sort_index()
+    return df
+
+
+def create_stable_test_history_df() -> pd.DataFrame:
+    """Create some stable test history."""
+    timestamps = [
+        "2021-07-01 07:00:00",
+        "2021-07-01 07:00:00",
+        "2021-07-01 08:00:00",
+        "2021-07-01 08:00:00",
+        "2021-07-02 07:00:00",
+        "2021-07-02 07:00:00",
+        "2021-07-02 08:00:00",
+        "2021-07-02 08:00:00",
+        "2021-07-03 07:00:00",
+        "2021-07-03 07:00:00",
+        "2021-07-03 08:00:00",
+        "2021-07-03 08:00:00",
+        "2021-07-03 09:00:00",
+    ]
+    test_identifiers = [
+        "test1",
+        "test2",
+        "test1",
+        "test2",
+        "test1",
+        "test2",
+        "test1",
+        "test2",
+        "test1",
+        "test2",
+        "test1",
+        "test2",
+        "test1",
+    ]
+    test_statutes = [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
     ]
     df = pd.DataFrame(
         {
@@ -515,3 +575,26 @@ def test_full_usage_runs_grouping(tmpdir: LocalPath):
 
     assert "2runs_flip_rate_top1.png" in files_in_tmpdir
     assert "2runs_flip_rate_ewm_top1.png" in files_in_tmpdir
+
+
+def test_no_flips(tmpdir: LocalPath):
+    test_history_path = os.path.join(tmpdir, "test_history.csv")
+    test_history = create_stable_test_history_df()
+    test_history.to_csv(test_history_path)
+
+    script_path = Path(__file__).parent
+    script_path = script_path / ".." / "flaky_tests_detection" / "check_flakes.py"
+    script_path = script_path.resolve()
+
+    args = [
+        sys.executable,
+        script_path,
+        f"--test-history-csv={test_history_path}",
+        "--grouping-option=runs",
+        "--window-size=2",
+        "--window-count=3",
+        "--top-n=1",
+    ]
+    process = subprocess.run(args, cwd=tmpdir, capture_output=True)
+    assert process.returncode == 0
+    assert process.stderr.decode() == "No flaky tests.\r\n"

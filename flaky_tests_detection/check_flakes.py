@@ -254,7 +254,11 @@ def main():
 
     printdata = get_top_fliprates(fliprate_table, args.top_n, precision)
 
-    logging.info("Top %s flaky tests based on latest window fliprate", args.top_n)
+    if not printdata.top_normal_scores and not printdata.top_ewm_scores:
+        logging.info("No flaky tests.")
+        return
+    else:
+        logging.info("Top %s flaky tests based on latest window fliprate", args.top_n)
     for testname, score in printdata.top_normal_scores.items():
         logging.info("%s --- score: %s", testname, score)
     logging.info(
