@@ -515,15 +515,3 @@ def test_full_usage_runs_grouping(tmpdir: LocalPath):
 
     assert "2runs_flip_rate_top1.png" in files_in_tmpdir
     assert "2runs_flip_rate_ewm_top1.png" in files_in_tmpdir
-
-
-if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        csv_path = sys.argv[1:][0]
-        test_history = create_test_history_df()
-        test_history.to_csv(csv_path)
-        print(f"Create CSV named:{csv_path}")
-        sys.exit(0)
-    else:
-        print("Give only one argument for CSV path!")
-        sys.exit(1)

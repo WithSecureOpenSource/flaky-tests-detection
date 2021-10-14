@@ -186,7 +186,7 @@ def parse_junit_to_df(folderpath: Path) -> pd.DataFrame:
     return df
 
 
-def main(argv):
+def main():
     """Print out top flaky tests and their fliprate scores.
     Also generate seaborn heatmaps visualizing the results if wanted.
     """
@@ -287,4 +287,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()
