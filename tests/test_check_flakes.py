@@ -597,4 +597,5 @@ def test_no_flips(tmpdir: LocalPath):
     ]
     process = subprocess.run(args, cwd=tmpdir, capture_output=True)
     assert process.returncode == 0
-    assert process.stderr.decode() == "No flaky tests.\r\n"
+    data = process.stderr.decode().strip()
+    assert data == "No flaky tests."
