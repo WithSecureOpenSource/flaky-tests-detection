@@ -587,8 +587,8 @@ def test_no_flips(tmpdir: LocalPath):
     script_path = script_path.resolve()
 
     args = [
-        sys.executable,
-        script_path,
+        str(sys.executable),
+        str(script_path),
         f"--test-history-csv={test_history_path}",
         "--grouping-option=runs",
         "--window-size=2",
