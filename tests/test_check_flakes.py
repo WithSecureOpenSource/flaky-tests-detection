@@ -565,6 +565,6 @@ def test_no_flips(tmpdir: LocalPath):
         "--top-n=1",
     ]
     process = subprocess.run(args, cwd=tmpdir, capture_output=True)
-    assert process.returncode == 0, f"stdout:\n{process.stdout}"
+    assert process.returncode == 0, f"stdout:\n{process.stdout.decode(encoding='utf-16')}"
     data = process.stderr.decode().strip()
     assert data == f"No flaky tests."
