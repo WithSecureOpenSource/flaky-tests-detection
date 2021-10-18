@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v1.2.0 (2021-10-18)
+### Feature
+* Use only ewm for flip rate calculations ([`b44b19e`](https://github.com/F-Secure/flaky-tests-detection/commit/b44b19e1fe0a9c5a4f845704912874ef368f32e1))
+
 ## v1.1.0 (2021-10-18)
 ### Feature
 * Drop Python 3.6 support ([`a2767bf`](https://github.com/F-Secure/flaky-tests-detection/commit/a2767bfaf83312c2efee1788e84217b469821621))
