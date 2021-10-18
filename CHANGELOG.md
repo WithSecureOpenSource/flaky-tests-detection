@@ -2,6 +2,14 @@
 
 <!--next-version-placeholder-->
 
+## v1.1.0 (2021-10-18)
+### Feature
+* Drop Python 3.6 support ([`a2767bf`](https://github.com/F-Secure/flaky-tests-detection/commit/a2767bfaf83312c2efee1788e84217b469821621))
+
+### Documentation
+* Added reference to the paper and acknowledgement section to README.md ([`73bf525`](https://github.com/F-Secure/flaky-tests-detection/commit/73bf5259ceafc622f6d58e8ae6278ad3a649b9e3))
+* Update readme ([`4d76fd8`](https://github.com/F-Secure/flaky-tests-detection/commit/4d76fd84977788d23e67272add039ef8511e700e))
+
 ## v1.0.3 (2021-09-29)
 ### Fix
 * Retrieve setup.py version from __init__.py ([`8d1a998`](https://github.com/F-Secure/flaky-tests-detection/commit/8d1a998ffb952459afbd213551c8e2d315048034))
