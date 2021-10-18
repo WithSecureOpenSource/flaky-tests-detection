@@ -372,10 +372,9 @@ def test_no_zero_score_from_n_runs():
 def test_get_top_fliprates_uses_precision(tmpdir: LocalPath):
     df = create_long_test_history_df()
     result_fliprate_table = calculate_n_days_fliprate_table(df, 10, 3)
-    printdata = get_top_fliprates(result_fliprate_table, 10, 4)
-    for scores in printdata:
-        for test, score in scores.items():
-            assert len(str(score)) <= 6
+    top_tests = get_top_fliprates(result_fliprate_table, 10, 4)
+    for test, score in top_tests.items():
+        assert len(str(score)) <= 6
 
 
 def test_get_top_fliprates_from_run_windows():
@@ -386,11 +385,8 @@ def test_get_top_fliprates_from_run_windows():
     context = getcontext()
     context.prec = 4
     context.rounding = ROUND_UP
-    assert result.top_normal_scores == {"test1": Decimal(0.5) * 1}
-    assert result.top_ewm_scores == {"test1": Decimal(0.7) * 1}
-    for score in result.top_normal_scores.values():
-        assert len(str(score)) <= 6
-    for score in result.top_ewm_scores.values():
+    assert result == {"test1": Decimal(0.7) * 1}
+    for score in result.values():
         assert len(str(score)) <= 6
 
 
@@ -402,11 +398,8 @@ def test_get_top_fliprates_from_day_windows():
     context = getcontext()
     context.prec = 2
     context.rounding = ROUND_UP
-    assert result.top_normal_scores == {"test1": Decimal(0.5) * 1, "test3": Decimal(0.3) * 1}
-    assert result.top_ewm_scores == {"test1": Decimal(0.7) * 1, "test3": Decimal(0.2) * 1}
-    for score in result.top_normal_scores.values():
-        assert len(str(score)) <= 4
-    for score in result.top_ewm_scores.values():
+    assert result == {"test1": Decimal(0.7) * 1, "test3": Decimal(0.2) * 1}
+    for score in result.values():
         assert len(str(score)) <= 4
 
 
@@ -415,20 +408,9 @@ def test_get_image_tables_from_fliprate_table_day_grouping():
     from a fliprate table with grouping by days.
     """
     fliprate_table = create_fliprate_table_by_days()
-    top_tests = {"test1", "test3"}
     top_tests_ewm = {"test1", "test3"}
 
-    result = get_image_tables_from_fliprate_table(fliprate_table, top_tests, top_tests_ewm)
-
-    expected_normal_table = pd.DataFrame(
-        {
-            "test_identifier": ["test1", "test3"],
-            "2021-07-01": [0.0, 0.5],
-            "2021-07-02": [1.0, 0.0],
-            "2021-07-03": [0.5, 0.3],
-        }
-    ).set_index("test_identifier")
-    expected_normal_table.columns = pd.to_datetime(expected_normal_table.columns)
+    result = get_image_tables_from_fliprate_table(fliprate_table, top_tests_ewm)
 
     expected_ewm_table = pd.DataFrame(
         {
@@ -440,8 +422,7 @@ def test_get_image_tables_from_fliprate_table_day_grouping():
     ).set_index("test_identifier")
     expected_ewm_table.columns = pd.to_datetime(expected_ewm_table.columns)
 
-    assert_frame_equal(result.normal_table, expected_normal_table, check_names=False)
-    assert_frame_equal(result.ewm_table, expected_ewm_table, check_names=False)
+    assert_frame_equal(result, expected_ewm_table, check_names=False)
 
 
 def test_get_image_tables_from_fliprate_table_runs_grouping():
@@ -449,20 +430,10 @@ def test_get_image_tables_from_fliprate_table_runs_grouping():
     from a fliprate table with grouping by days.
     """
     fliprate_table = create_fliprate_table_by_runs()
-    top_tests = {"test1"}
     top_tests_ewm = {"test1"}
 
-    result = get_image_tables_from_fliprate_table(fliprate_table, top_tests, top_tests_ewm)
+    result = get_image_tables_from_fliprate_table(fliprate_table, top_tests_ewm)
 
-    expected_normal_table = pd.DataFrame(
-        {
-            "test_identifier": ["test1"],
-            1: [0.0],
-            2: [1.0],
-            3: [0.5],
-        }
-    ).set_index("test_identifier")
-    expected_normal_table.columns = expected_normal_table.columns.astype(int)
     expected_ewm_table = pd.DataFrame(
         {
             "test_identifier": ["test1"],
@@ -473,8 +444,7 @@ def test_get_image_tables_from_fliprate_table_runs_grouping():
     ).set_index("test_identifier")
     expected_ewm_table.columns = expected_ewm_table.columns.astype(int)
 
-    assert_frame_equal(result.normal_table, expected_normal_table, check_names=False)
-    assert_frame_equal(result.ewm_table, expected_ewm_table, check_names=False)
+    assert_frame_equal(result, expected_ewm_table, check_names=False)
 
 
 def test_parse_junit_to_df(testdir: Testdir):
@@ -516,9 +486,6 @@ def test_parse_junit_to_df(testdir: Testdir):
 
 
 def test_full_usage_day_grouping(tmpdir: LocalPath):
-    """Test case to check that running the script with day grouping
-    produces the correctly named heatmaps.
-    """
     original_path = os.getcwd()
     test_history_path = os.path.join(tmpdir, "test_history.csv")
     test_history = create_test_history_df()
@@ -542,7 +509,8 @@ def test_full_usage_day_grouping(tmpdir: LocalPath):
     files_in_tmpdir = os.listdir()
     os.chdir(original_path)
 
-    assert "1day_flip_rate_top2.png" in files_in_tmpdir
+    png_files = [file for file in files_in_tmpdir if file.endswith(".png")]
+    assert len(png_files) == 1
     assert "1day_flip_rate_ewm_top2.png" in files_in_tmpdir
 
 
@@ -573,7 +541,8 @@ def test_full_usage_runs_grouping(tmpdir: LocalPath):
     files_in_tmpdir = os.listdir()
     os.chdir(original_path)
 
-    assert "2runs_flip_rate_top1.png" in files_in_tmpdir
+    png_files = [file for file in files_in_tmpdir if file.endswith(".png")]
+    assert len(png_files) == 1
     assert "2runs_flip_rate_ewm_top1.png" in files_in_tmpdir
 
 
@@ -596,6 +565,6 @@ def test_no_flips(tmpdir: LocalPath):
         "--top-n=1",
     ]
     process = subprocess.run(args, cwd=tmpdir, capture_output=True)
-    assert process.returncode == 0
+    assert process.returncode == 0, f"stdout:\n{process.stdout.decode(encoding='utf-16')}"
     data = process.stderr.decode().strip()
-    assert data == "No flaky tests."
+    assert data == f"No flaky tests."
