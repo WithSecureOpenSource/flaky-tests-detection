@@ -2,7 +2,7 @@ import argparse
 import logging
 from decimal import getcontext, Decimal, ROUND_UP
 from pathlib import Path
-from typing import Dict, NamedTuple, Set
+from typing import Dict, Set
 
 from junitparser import JUnitXml
 import pandas as pd
@@ -14,21 +14,17 @@ EWM_ALPHA = 0.1
 EWM_ADJUST = False
 HEATMAP_FIGSIZE = (100, 50)
 
-PrintData = NamedTuple(
-    "PrintData",
-    [
-        ("top_normal_scores", Dict[str, Decimal]),
-        ("top_ewm_scores", Dict[str, Decimal]),
-    ],
-)
 
-TableData = NamedTuple(
-    "TableData",
-    [
-        ("normal_table", pd.DataFrame),
-        ("ewm_table", pd.DataFrame),
-    ],
-)
+def parse_input_files(junit_files: str, test_history_csv: str):
+    if junit_files:
+        df = parse_junit_to_df(Path(junit_files))
+    else:
+        df = pd.read_csv(
+            test_history_csv,
+            index_col="timestamp",
+            parse_dates=["timestamp"],
+        )
+    return df.sort_index()
 
 
 def calc_fliprate(testruns: pd.Series) -> float:
@@ -101,8 +97,10 @@ def calculate_n_runs_fliprate_table(testrun_table: pd.DataFrame, window_size: in
     return fliprate_table[fliprate_table.flip_rate != 0]
 
 
-def get_top_fliprates(fliprate_table: pd.DataFrame, top_n: int, precision: int) -> PrintData:
-    """Look at the last calculation window for each test from the fliprate table
+def get_top_fliprates(fliprate_table: pd.DataFrame, top_n: int, precision: int) -> Dict[str, Decimal]:
+    """return the top n highest scoring test identifiers and their scores
+
+    Look at the last calculation window for each test from the fliprate table
     and return the top n highest scoring test identifiers and their scores
     """
     context = getcontext()
@@ -110,37 +108,23 @@ def get_top_fliprates(fliprate_table: pd.DataFrame, top_n: int, precision: int) 
     context.rounding = ROUND_UP
     last_window_values = fliprate_table.groupby("test_identifier").last()
 
-    top_fliprates = last_window_values.nlargest(top_n, "flip_rate")[["flip_rate"]].reset_index()
-
     top_fliprates_ewm = last_window_values.nlargest(top_n, "flip_rate_ewm")[["flip_rate_ewm"]].reset_index()
-
     #  Context precision and rounding only come into play during arithmetic operations. Therefore * 1
-    top_fliprates_dict = {testname: Decimal(score) * 1 for testname, score in top_fliprates.to_records(index=False)}
-
-    top_fliprates_ewm_dict = {
-        testname: Decimal(score) * 1 for testname, score in top_fliprates_ewm.to_records(index=False)
-    }
-
-    return PrintData(top_normal_scores=top_fliprates_dict, top_ewm_scores=top_fliprates_ewm_dict)
+    return {testname: Decimal(score) * 1 for testname, score in top_fliprates_ewm.to_records(index=False)}
 
 
 def get_image_tables_from_fliprate_table(
     fliprate_table: pd.DataFrame,
-    top_identifiers: Set[str],
     top_identifiers_ewm: Set[str],
-) -> TableData:
+) -> pd.DataFrame:
     """Construct tables for heatmap generation from the fliprate table.
-    Rows contain the test identifier and
-    columns contain the window as timestamp for daily grouping or integer for grouping with runs.
+
+    Rows contain the test identifier and columns contain the window as timestamp for
+    daily grouping or integer for grouping with runs.
     """
     pivot_columns = "timestamp" if "timestamp" in fliprate_table.columns else "window"
-    image = fliprate_table.pivot(index="test_identifier", columns=pivot_columns, values="flip_rate")
     image_ewm = fliprate_table.pivot(index="test_identifier", columns=pivot_columns, values="flip_rate_ewm")
-
-    image = image[image.index.isin(top_identifiers)]
-    image_ewm = image_ewm[image_ewm.index.isin(top_identifiers_ewm)]
-
-    return TableData(normal_table=image, ewm_table=image_ewm)
+    return image_ewm[image_ewm.index.isin(top_identifiers_ewm)]
 
 
 def generate_image(image: pd.DataFrame, title: str, filename: str) -> None:
@@ -185,6 +169,43 @@ def parse_junit_to_df(folderpath: Path) -> pd.DataFrame:
     return df
 
 
+def create_heat_map(
+    heatmap: bool,
+    fliprate_table: pd.DataFrame,
+    top_flip_rates: Dict[str, Decimal],
+    grouping_option: str,
+    top_n: int,
+    window_size: int,
+    window_count: int,
+):
+    if not heatmap:
+        return
+
+    logging.info("\n\nGenerating heatmap images...")
+    top_identifiers_ewm = set(top_flip_rates.keys())
+
+    table_data = get_image_tables_from_fliprate_table(fliprate_table, top_identifiers_ewm)
+
+    if grouping_option == "days":
+        filename = f"{window_size}day_flip_rate_top{top_n}.png"
+        title_ewm = (
+            f"Top {top_n} of tests with highest latest window exponentially weighted moving average fliprate score "
+            f"- alpha (smoothing factor) = {EWM_ALPHA} - last {window_size * window_count} days of data"
+        )
+        filename_ewm = f"{window_size}day_flip_rate_ewm_top{top_n}.png"
+    else:
+        filename = f"{window_size}runs_flip_rate_top{top_n}.png"
+        title_ewm = (
+            f"Top {top_n} of tests with highest latest window exponentially weighted moving average fliprate score - "
+            f"alpha (smoothing factor) = {EWM_ALPHA} - {window_size} last runs fliprate and "
+            f"{window_size * window_count} last runs data"
+        )
+        filename_ewm = f"{window_size}runs_flip_rate_ewm_top{top_n}.png"
+
+    generate_image(table_data, title_ewm, filename_ewm)
+    logging.info("%s and %s generated.", filename, filename_ewm)
+
+
 def main():
     """Print out top flaky tests and their fliprate scores.
     Also generate seaborn heatmaps visualizing the results if wanted.
@@ -193,13 +214,9 @@ def main():
     logging.basicConfig(format="%(message)s", level=logging.INFO)
 
     parser = argparse.ArgumentParser()
-
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
-        "--junit-files",
-        help="provide path for a folder with JUnit xml test history files",
-    )
-    group.add_argument("--test-history-csv", help="provide path for precomputed test history csv")
+    group.add_argument("--junit-files", help="Path for a folder with JUnit xml test history files", type=str)
+    group.add_argument("--test-history-csv", help="Path for precomputed test history csv", type=str)
     parser.add_argument(
         "--grouping-option",
         choices=["days", "runs"],
@@ -235,58 +252,28 @@ def main():
     args = parser.parse_args()
     precision = args.decimal_count
 
-    if args.junit_files:
-        df = parse_junit_to_df(Path(args.junit_files))
-    else:
-        df = pd.read_csv(
-            args.test_history_csv,
-            index_col="timestamp",
-            parse_dates=["timestamp"],
-        )
-
-    df = df.sort_index()
+    df = parse_input_files(args.junit_files, args.test_history_csv)
 
     if args.grouping_option == "days":
         fliprate_table = calculate_n_days_fliprate_table(df, args.window_size, args.window_count)
     else:
         fliprate_table = calculate_n_runs_fliprate_table(df, args.window_size, args.window_count)
 
-    printdata = get_top_fliprates(fliprate_table, args.top_n, precision)
+    top_flip_rates = get_top_fliprates(fliprate_table, args.top_n, precision)
 
-    if not printdata.top_normal_scores and not printdata.top_ewm_scores:
+    if not top_flip_rates:
         logging.info("No flaky tests.")
         return
-    else:
-        logging.info("Top %s flaky tests based on latest window fliprate", args.top_n)
-    for testname, score in printdata.top_normal_scores.items():
-        logging.info("%s --- score: %s", testname, score)
+    top_n = args.top_n
     logging.info(
-        "\nTop %s flaky tests based on latest window exponential weighted moving average fliprate score",
-        args.top_n,
+        f"\nTop {top_n} flaky tests based on latest window exponential weighted moving average fliprate score",
     )
-    for testname, score in printdata.top_ewm_scores.items():
-        logging.info("%s --- score: %s", testname, score)
+    for test_name, score in top_flip_rates.items():
+        logging.info(f"{test_name} --- score: {score}")
 
-    if args.heatmap:
-        logging.info("\n\nGenerating heatmap images...")
-        top_identifiers = set(printdata.top_normal_scores.keys())
-        top_identifiers_ewm = set(printdata.top_normal_scores.keys())
-
-        tabledata = get_image_tables_from_fliprate_table(fliprate_table, top_identifiers, top_identifiers_ewm)
-
-        if args.grouping_option == "days":
-            title = f"Top {args.top_n} of tests with highest latest window fliprate - no exponentially weighted moving average - last {args.window_size * args.window_count} days of data"
-            filename = f"{args.window_size}day_flip_rate_top{args.top_n}.png"
-            title_ewm = f"Top {args.top_n} of tests with highest latest window exponentially weighted moving average fliprate score - alpha (smoothing factor) = {EWM_ALPHA} - last {args.window_size * args.window_count} days of data"
-            filename_ewm = f"{args.window_size}day_flip_rate_ewm_top{args.top_n}.png"
-        else:
-            title = f"Top {args.top_n} of tests with highest latest window fliprate - no exponentially weighted moving average - {args.window_size} last runs fliprate and {args.window_size * args.window_count} last runs data"
-            filename = f"{args.window_size}runs_flip_rate_top{args.top_n}.png"
-            title_ewm = f"Top {args.top_n} of tests with highest latest window exponentially weighted moving average fliprate score - alpha (smoothing factor) = {EWM_ALPHA} - {args.window_size} last runs fliprate and {args.window_size * args.window_count} last runs data"
-            filename_ewm = f"{args.window_size}runs_flip_rate_ewm_top{args.top_n}.png"
-        generate_image(tabledata.normal_table, title, filename)
-        generate_image(tabledata.ewm_table, title_ewm, filename_ewm)
-        logging.info("%s and %s generated.", filename, filename_ewm)
+    create_heat_map(
+        args.heatmap, fliprate_table, top_flip_rates, args.grouping_option, top_n, args.window_size, args.window_count
+    )
 
 
 if __name__ == "__main__":
