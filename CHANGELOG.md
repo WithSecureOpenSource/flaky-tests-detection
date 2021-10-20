@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v1.2.1 (2021-10-20)
+### Fix
+* Not correct logging for heatmap ([`94cc26b`](https://github.com/F-Secure/flaky-tests-detection/commit/94cc26bb6cc7923713536ff54e0c498aaadc5835))
+
 ## v1.2.0 (2021-10-18)
 ### Feature
 * Use only ewm for flip rate calculations ([`b44b19e`](https://github.com/F-Secure/flaky-tests-detection/commit/b44b19e1fe0a9c5a4f845704912874ef368f32e1))
