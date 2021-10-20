@@ -187,14 +187,12 @@ def create_heat_map(
     table_data = get_image_tables_from_fliprate_table(fliprate_table, top_identifiers_ewm)
 
     if grouping_option == "days":
-        filename = f"{window_size}day_flip_rate_top{top_n}.png"
         title_ewm = (
             f"Top {top_n} of tests with highest latest window exponentially weighted moving average fliprate score "
             f"- alpha (smoothing factor) = {EWM_ALPHA} - last {window_size * window_count} days of data"
         )
         filename_ewm = f"{window_size}day_flip_rate_ewm_top{top_n}.png"
     else:
-        filename = f"{window_size}runs_flip_rate_top{top_n}.png"
         title_ewm = (
             f"Top {top_n} of tests with highest latest window exponentially weighted moving average fliprate score - "
             f"alpha (smoothing factor) = {EWM_ALPHA} - {window_size} last runs fliprate and "
@@ -203,7 +201,7 @@ def create_heat_map(
         filename_ewm = f"{window_size}runs_flip_rate_ewm_top{top_n}.png"
 
     generate_image(table_data, title_ewm, filename_ewm)
-    logging.info("%s and %s generated.", filename, filename_ewm)
+    logging.info(f"generated {filename_ewm}")
 
 
 def main():
