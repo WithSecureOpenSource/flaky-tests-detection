@@ -1,6 +1,9 @@
-# flaky_tests_detection
-
-Github actions plugin and [Python package](https://pypi.org/project/flaky-tests-detection/) to check flakiness of tests by calculating fliprates. Usage demonstrated [here](https://github.com/guotin/flaky-test-ci) at the `actions` page.
+# Flaky tests detection
+Visualise tests which state canges most often. During software development, it is sometimes common that some test start randomly fail,
+but finding those test tedious and time consuming problem. Flaky tests detection solves that problem by processing historical xunit test
+results and cheking which tests changes state most often. Flaky tests detection is available as Github Action plugin and
+[Python package](https://pypi.org/project/flaky-tests-detection/). For usage see [example](https://github.com/F-Secure/flaky-test-ci)
+at the `actions` page.
 
 Implementation is based on ["Modeling and ranking flaky tests at Apple"](https://dl.acm.org/doi/10.1145/3377813.3381370) by Kowalczyk, Emily & Nair, Karan & Gao, Zebao & Silberstein, Leo & Long, Teng & Memon, Atif.
 
