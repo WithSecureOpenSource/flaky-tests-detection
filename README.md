@@ -1,6 +1,6 @@
 # flaky_tests_detection
 
-Github actions plugin to check flakiness of tests by calculating fliprates. Usage demonstrated [here](https://github.com/guotin/flaky-test-ci) at the `actions` page.
+Github actions plugin and [Python package](https://pypi.org/project/flaky-tests-detection/) to check flakiness of tests by calculating fliprates. Usage demonstrated [here](https://github.com/guotin/flaky-test-ci) at the `actions` page.
 
 Implementation is based on ["Modeling and ranking flaky tests at Apple"](https://dl.acm.org/doi/10.1145/3377813.3381370) by Kowalczyk, Emily & Nair, Karan & Gao, Zebao & Silberstein, Leo & Long, Teng & Memon, Atif.
 
