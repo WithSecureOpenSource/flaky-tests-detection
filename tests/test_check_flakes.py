@@ -7,9 +7,9 @@ import runpy
 import sys
 
 import pandas as pd
+from _pytest.legacypath import Testdir
 from pandas.testing import assert_frame_equal, assert_series_equal
 import pytest
-from _pytest.pytester import Testdir
 from py._path.local import LocalPath
 
 from flaky_tests_detection.check_flakes import (
@@ -161,6 +161,32 @@ def create_stable_test_history_df() -> pd.DataFrame:
         "pass",
         "pass",
         "pass",
+        "pass",
+    ]
+    df = pd.DataFrame(
+        {
+            "timestamp": timestamps,
+            "test_identifier": test_identifiers,
+            "test_status": test_statutes,
+        }
+    )
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df = df.set_index("timestamp").sort_index()
+    return df
+
+
+def create_stable_test_history_df_2() -> pd.DataFrame:
+    """Create some stable test history."""
+    timestamps = [
+        "2021-07-03 08:00:00",
+        "2021-07-03 08:00:00",
+    ]
+    test_identifiers = [
+        "test1",
+        "test1",
+    ]
+    test_statutes = [
+        "fail",
         "pass",
     ]
     df = pd.DataFrame(
@@ -375,6 +401,13 @@ def test_get_top_fliprates_uses_precision(tmpdir: LocalPath):
     top_tests = get_top_fliprates(result_fliprate_table, 10, 4)
     for test, score in top_tests.items():
         assert len(str(score)) <= 6
+
+
+def test_get_top_fliprates_uses_precision_2(tmpdir: LocalPath):
+    df = create_stable_test_history_df_2()
+    result_fliprate_table = calculate_n_days_fliprate_table(df, 10, 3)
+    top_tests = get_top_fliprates(result_fliprate_table, 10, 4)
+    assert top_tests
 
 
 def test_get_top_fliprates_from_run_windows():
