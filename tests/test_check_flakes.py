@@ -601,3 +601,24 @@ def test_no_flips(tmpdir: LocalPath):
     assert process.returncode == 0, f"stdout:\n{process.stdout.decode(encoding='utf-16')}"
     data = process.stderr.decode().strip()
     assert data == f"No flaky tests."
+
+
+def test_no_flips_xml(tmpdir: LocalPath, capsys):
+    test_path = Path(__file__).parent
+    xunit_files = test_path / "resources"
+    script_path = test_path / ".." / "flaky_tests_detection" / "check_flakes.py"
+    script_path = script_path.resolve()
+
+    args = [
+        str(sys.executable),
+        str(script_path),
+        f"--junit-files={xunit_files}",
+        "--grouping-option=runs",
+        "--window-size=2",
+        "--window-count=3",
+        "--top-n=1",
+    ]
+    process = subprocess.run(args, cwd=tmpdir, capture_output=True)
+    assert process.returncode == 0, f"stdout:\n{process.stdout.decode(encoding='utf-16')}"
+    data = process.stderr.decode().strip()
+    assert data == f"No flaky tests."

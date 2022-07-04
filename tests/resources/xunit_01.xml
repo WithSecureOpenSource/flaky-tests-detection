@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="pytest" errors="0" failures="0" skipped="0" tests="2" time="1.188" timestamp="2022-05-30T14:49:18.865623" hostname="PC">
+		<testcase classname="tests.test_me" name="test_01" file="tests\test_me.py" line="0" time="0.025"/>
+		<testcase classname="tests.test_me" name="test_02" file="tests\test_me.py" line="0" time="0.014"/>
+	</testsuite>
+</testsuites>
