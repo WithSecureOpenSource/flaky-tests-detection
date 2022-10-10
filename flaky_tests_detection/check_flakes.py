@@ -35,7 +35,7 @@ def calc_fliprate(testruns: pd.Series) -> float:
     previous = None
     flips = 0
     possible_flips = len(testruns) - 1
-    for _, val in testruns.iteritems():
+    for _, val in testruns.items():
         if first:
             first = False
             previous = val
