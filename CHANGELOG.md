@@ -2,6 +2,14 @@
 
 <!--next-version-placeholder-->
 
+## v1.2.2 (2022-10-10)
+### Fix
+* Remove deprecated pandas method ([`2897cad`](https://github.com/F-Secure/flaky-tests-detection/commit/2897cad22044d5a6200557a6b8e9eb8a65756e4d))
+
+### Documentation
+* Improve README.md ([`35c9154`](https://github.com/F-Secure/flaky-tests-detection/commit/35c915481534985b943f9aba83f8a80bce8574ff))
+* Mention that also available from Pypi ([`705447c`](https://github.com/F-Secure/flaky-tests-detection/commit/705447c4774298cdb9e2c14a7b17a1927927af00))
+
 ## v1.2.1 (2021-10-20)
 ### Fix
 * Not correct logging for heatmap ([`94cc26b`](https://github.com/F-Secure/flaky-tests-detection/commit/94cc26bb6cc7923713536ff54e0c498aaadc5835))
