@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v1.2.3 (2022-10-10)
+### Fix
+* Fix types i README ([`79ca6d8`](https://github.com/F-Secure/flaky-tests-detection/commit/79ca6d810b567a307869efe382ca467ad6015c0a))
+
 ## v1.2.2 (2022-10-10)
 ### Fix
 * Remove deprecated pandas method ([`2897cad`](https://github.com/F-Secure/flaky-tests-detection/commit/2897cad22044d5a6200557a6b8e9eb8a65756e4d))
