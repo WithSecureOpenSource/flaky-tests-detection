@@ -518,6 +518,40 @@ def test_parse_junit_to_df(testdir: Testdir):
         assert result_value != skipped
 
 
+def test_parse_junit_to_df_without_testsuites(tmpdir: LocalPath):
+    """Test junit file parsing to test history dataframe.
+    Junit report doesn't have a testsuites element.
+    """
+    original_path = os.getcwd()
+    test_junit_path = os.path.join(original_path, "tests/junit_rf4")
+    result_df = parse_junit_to_df(Path(test_junit_path))
+
+    assert list(result_df.columns) == ["test_identifier", "test_status"]
+    assert result_df.index.name == "timestamp"
+
+    expected_values = [
+        ("Test::Testi Allways Passed", "pass"),
+        ("Test::test failing always", "failure"),
+        ("Test::test random 10percent fail", "failure"),
+        ("Test::test random 50percent fail", "failure"),
+        ("Test::test random 25percent fail", "pass"),
+    ]
+
+    for result_value in result_df.itertuples(index=False, name=None):
+        assert result_value in expected_values
+
+
+def test_parse_junit_to_df_empty_dir(testdir: Testdir):
+    """Test junit file parsing to test history dataframe
+    No Unit files in given directory
+    """
+    test_junit_path = testdir.mkdir("empty_junit_dir")
+    with pytest.raises(RuntimeError) as excinfo:
+        result_df = parse_junit_to_df(Path(str(test_junit_path)))
+
+    assert "No Junit files found from path" in str(excinfo.value)
+
+
 def test_full_usage_day_grouping(tmpdir: LocalPath):
     original_path = os.getcwd()
     test_history_path = os.path.join(tmpdir, "test_history.csv")

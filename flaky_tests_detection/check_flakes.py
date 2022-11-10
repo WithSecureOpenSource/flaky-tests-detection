@@ -4,7 +4,7 @@ from decimal import getcontext, Decimal, ROUND_UP
 from pathlib import Path
 from typing import Dict, Set
 
-from junitparser import JUnitXml
+from junitparser import JUnitXml, TestSuite
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -136,37 +136,53 @@ def generate_image(image: pd.DataFrame, title: str, filename: str) -> None:
     plt.close()
 
 
+def parse_junit_suite_to_df(suite: TestSuite) -> list:
+    """Parses Junit TestSuite results to a test history dataframe"""
+    dataframe_entries = []
+    time = suite.timestamp
+
+    for testcase in suite:
+        test_identifier = testcase.classname + "::" + testcase.name
+
+        # junitparser has "failure", "skipped" or "error" in result list if any
+        if not testcase.result:
+            test_status = "pass"
+        else:
+            test_status = testcase.result[0]._tag
+            if test_status == "skipped":
+                continue
+
+        dataframe_entries.append(
+            {
+                "timestamp": time,
+                "test_identifier": test_identifier,
+                "test_status": test_status,
+            }
+        )
+    return dataframe_entries
+
+
 def parse_junit_to_df(folderpath: Path) -> pd.DataFrame:
     """Read JUnit test result files to a test history dataframe"""
     dataframe_entries = []
 
     for filepath in folderpath.glob("*.xml"):
         xml = JUnitXml.fromfile(filepath)
-        for suite in xml:
-            time = suite.timestamp
-            for testcase in suite:
-                test_identifier = testcase.classname + "::" + testcase.name
+        if isinstance(xml, JUnitXml):
+            for suite in xml:
+                dataframe_entries += parse_junit_suite_to_df(suite)
+        elif isinstance(xml, TestSuite):
+            dataframe_entries += parse_junit_suite_to_df(xml)
+        else:
+            raise TypeError(f"not known suite type in {filepath}")
 
-                # junitparser has "failure", "skipped" or "error" in result list if any
-                if not testcase.result:
-                    test_status = "pass"
-                else:
-                    test_status = testcase.result[0]._tag
-                    if test_status == "skipped":
-                        continue
-
-                dataframe_entries.append(
-                    {
-                        "timestamp": time,
-                        "test_identifier": test_identifier,
-                        "test_status": test_status,
-                    }
-                )
-
-    df = pd.DataFrame(dataframe_entries)
-    df["timestamp"] = pd.to_datetime(df["timestamp"])
-    df = df.set_index("timestamp")
-    return df
+    if dataframe_entries:
+        df = pd.DataFrame(dataframe_entries)
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        df = df.set_index("timestamp")
+        return df
+    else:
+        raise RuntimeError(f"No Junit files found from path {folderpath}")
 
 
 def create_heat_map(
