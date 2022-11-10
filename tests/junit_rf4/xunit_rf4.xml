@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Test" tests="5" errors="0" failures="3" skipped="0" time="0.086">
+    <testcase classname="Test" name="Testi Allways Passed" time="0.001">
+    </testcase>
+    <testcase classname="Test" name="test failing always" time="0.003">
+        <failure message="AssertionError" type="AssertionError"/>
+    </testcase>
+    <testcase classname="Test" name="test random 10percent fail" time="0.002">
+        <failure message="AssertionError" type="AssertionError"/>
+    </testcase>
+    <testcase classname="Test" name="test random 50percent fail" time="0.001">
+        <failure message="AssertionError" type="AssertionError"/>
+    </testcase>
+    <testcase classname="Test" name="test random 25percent fail" time="0.001">
+    </testcase>
+</testsuite>
