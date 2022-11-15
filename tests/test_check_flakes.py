@@ -10,7 +10,7 @@ import pandas as pd
 from _pytest.legacypath import Testdir
 from pandas.testing import assert_frame_equal, assert_series_equal
 import pytest
-from py._path.local import LocalPath
+from py.path import LocalPath
 
 from flaky_tests_detection.check_flakes import (
     calc_fliprate,
