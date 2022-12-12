@@ -1,4 +1,7 @@
 # Flaky tests detection
+
+<center><img src="https://github.com/F-Secure/flaky-tests-detection/raw/master/docs/imgs/Flaky-test-detection" width="120px" height="120px"/></center>
+
 Visualize tests whose state changes most often. During software development, it is often common that some tests start to randomly fail,
 but finding those tests is a tedious and time consuming problem. Flaky tests detection solves that problem by processing historical xunit test
 results and checks which tests changes state most often. Flaky tests detection is available as Github Action plugin and
