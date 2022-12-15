@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v1.3.0 (2022-12-15)
+### Feature
+* Support RobotFramework xUnit files ([`cf3d58a`](https://github.com/F-Secure/flaky-tests-detection/commit/cf3d58a858a577da504349f9871988fcfc0a7532))
+
+### Documentation
+* Icon ([`4bd3ced`](https://github.com/F-Secure/flaky-tests-detection/commit/4bd3cedb2ec18da9b732975db3fe7db5c23e8e44))
+
 ## v1.2.3 (2022-10-10)
 ### Fix
 * Fix types i README ([`79ca6d8`](https://github.com/F-Secure/flaky-tests-detection/commit/79ca6d810b567a307869efe382ca467ad6015c0a))
